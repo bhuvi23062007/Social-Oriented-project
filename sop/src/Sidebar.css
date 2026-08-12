@@ -1,0 +1,291 @@
+
+
+
+/* =========================================
+   SMART COMMUNITY WASTE SIDEBAR
+========================================= */
+
+.sidebar {
+  width: 255px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 24px 16px;
+
+  background: #123d2a;
+  color: #ffffff;
+
+  border-right: 1px solid #1e5a3c;
+  box-shadow: 4px 0 18px rgba(0, 0, 0, 0.08);
+
+  box-sizing: border-box;
+}
+
+/* =========================================
+   LOGO
+========================================= */
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 4px 10px 24px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.logo-icon {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: #58b879;
+
+  font-size: 22px;
+
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.18);
+}
+
+.sidebar-logo h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.sidebar-logo span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #9fc5ae;
+
+  font-size: 11px;
+}
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.sidebar-nav {
+  padding-top: 26px;
+}
+
+.nav-title {
+  margin: 0 10px 12px;
+
+  color: #7fae91;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 1.4px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  width: 100%;
+
+  margin-bottom: 6px;
+  padding: 13px 14px;
+
+  box-sizing: border-box;
+
+  border-radius: 10px;
+
+  color: #d5e7db;
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  transition: all 0.2s ease;
+}
+
+.nav-link span {
+  width: 24px;
+
+  display: flex;
+  justify-content: center;
+
+  font-size: 17px;
+}
+
+.nav-link:hover {
+  background: #1e5a3c;
+  color: #ffffff;
+
+  transform: translateX(3px);
+}
+
+/* =========================================
+   BOTTOM SECTION
+========================================= */
+
+.sidebar-bottom {
+  margin-top: auto;
+
+  padding-top: 18px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* User */
+
+.user-box {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.user-avatar-small {
+  width: 39px;
+  height: 39px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #d9f0df;
+
+  color: #123d2a;
+
+  font-size: 17px;
+}
+
+.user-box strong {
+  display: block;
+
+  color: #ffffff;
+
+  font-size: 13px;
+}
+
+.user-box span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #91b59f;
+
+  font-size: 10px;
+}
+
+/* Logout */
+
+.logout-link {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 12px 14px;
+
+  border-radius: 10px;
+
+  color: #d5e7db;
+
+  text-decoration: none;
+
+  font-size: 14px;
+
+  transition: all 0.2s ease;
+}
+
+.logout-link span {
+  width: 24px;
+
+  display: flex;
+  justify-content: center;
+
+  font-size: 17px;
+}
+
+.logout-link:hover {
+  background: #713c3c;
+
+  color: #ffffff;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 800px) {
+  .sidebar {
+    width: 220px;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    width: 70px;
+    padding: 20px 9px;
+  }
+
+  .sidebar-logo {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sidebar-logo h2,
+  .sidebar-logo span,
+  .nav-title,
+  .nav-link,
+  .logout-link {
+    font-size: 0;
+  }
+
+  .nav-link,
+  .logout-link {
+    justify-content: center;
+    padding: 13px 5px;
+  }
+
+  .nav-link span,
+  .logout-link span {
+    font-size: 18px;
+  }
+
+  .user-box {
+    justify-content: center;
+  }
+
+  .user-box > div:last-child {
+    display: none;
+  }
+}
+.nav-link.active {
+  background: #2d7048;
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 #72c58b;
+}

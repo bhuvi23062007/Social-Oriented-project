@@ -1,0 +1,25 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.main-content {
+  margin-left: 250px;
+  min-height: 100vh;
+}
+
+@media (max-width: 800px) {
+  .main-content {
+    margin-left: 210px;
+  }
+}
+
+@media (max-width: 600px) {
+  .main-content {
+    margin-left: 70px;
+  }
+}

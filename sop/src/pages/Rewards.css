@@ -1,0 +1,237 @@
+/* ================================
+   REWARDS PAGE
+================================ */
+
+.rewards-page {
+  min-height: 100vh;
+  background: #f4f7f5;
+  padding: 40px 55px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Header */
+
+.rewards-header {
+  margin-bottom: 28px;
+}
+
+.rewards-header h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
+  color: #163c27;
+}
+
+.rewards-header p {
+  margin: 0;
+  color: #718078;
+  font-size: 15px;
+}
+
+/* Points */
+
+.points-card {
+  background: linear-gradient(135deg, #18743a, #23934c);
+  color: white;
+  padding: 30px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 35px;
+  box-shadow: 0 10px 25px rgba(24, 116, 58, 0.2);
+}
+
+.points-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 35px;
+}
+
+.points-card p {
+  margin: 0 0 5px;
+  opacity: 0.85;
+  font-size: 14px;
+}
+
+.points-card h2 {
+  margin: 0 0 6px;
+  font-size: 30px;
+}
+
+.points-card span {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* Sections */
+
+.earn-section,
+.available-rewards {
+  margin-bottom: 35px;
+}
+
+.earn-section h2,
+.available-rewards h2 {
+  margin: 0 0 20px;
+  font-size: 23px;
+  color: #183c27;
+}
+
+/* Earn Cards */
+
+.earn-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.earn-card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  border: 1px solid #e3eae5;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+  transition: 0.25s ease;
+}
+
+.earn-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.earn-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  background: #e5f5ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  margin-bottom: 15px;
+}
+
+.earn-card h3 {
+  margin: 0 0 8px;
+  color: #1d5530;
+  font-size: 18px;
+}
+
+.earn-card p {
+  margin: 0 0 15px;
+  color: #718078;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.earn-card strong {
+  color: #18743a;
+  font-size: 14px;
+}
+
+/* Rewards */
+
+.rewards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.reward-card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  border: 1px solid #e3eae5;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+  transition: 0.25s ease;
+}
+
+.reward-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.reward-image {
+  height: 130px;
+  border-radius: 12px;
+  background: #eaf6ed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 55px;
+  margin-bottom: 18px;
+}
+
+.reward-card h3 {
+  margin: 0 0 8px;
+  color: #26372d;
+  font-size: 18px;
+}
+
+.reward-card p {
+  margin: 0 0 20px;
+  color: #718078;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.reward-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 15px;
+  border-top: 1px solid #edf1ee;
+}
+
+.reward-bottom span {
+  color: #18743a;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.reward-bottom button {
+  border: none;
+  background: #18743a;
+  color: white;
+  padding: 9px 16px;
+  border-radius: 7px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.reward-bottom button:hover {
+  background: #125b2d;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .rewards-page {
+    padding: 30px 25px;
+  }
+
+  .earn-container,
+  .rewards-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .rewards-page {
+    padding: 20px 15px;
+  }
+
+  .points-card {
+    padding: 22px;
+  }
+
+  .points-card h2 {
+    font-size: 25px;
+  }
+}
