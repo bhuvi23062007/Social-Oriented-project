@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import Sidebar from './Sidebar'
@@ -10,15 +9,15 @@ import MyReports from './pages/MyReports'
 import Rewards from './pages/Rewards'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Learning from './pages/Learning'
+import CleanerDashboard from './pages/CleanerDashboard'
 
 import './App.css'
 
 function App() {
   return (
     <BrowserRouter>
-
       <Routes>
-
         {/* Home - No Sidebar */}
         <Route path="/" element={<Home />} />
 
@@ -30,12 +29,12 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <>
+            <div className="app-shell">
               <Sidebar />
               <main className="main-content">
                 <Dashboard />
               </main>
-            </>
+            </div>
           }
         />
 
@@ -43,12 +42,12 @@ function App() {
         <Route
           path="/report-waste"
           element={
-            <>
+            <div className="app-shell">
               <Sidebar />
               <main className="main-content">
                 <ReportWaste />
               </main>
-            </>
+            </div>
           }
         />
 
@@ -56,12 +55,12 @@ function App() {
         <Route
           path="/my-reports"
           element={
-            <>
+            <div className="app-shell">
               <Sidebar />
               <main className="main-content">
                 <MyReports />
               </main>
-            </>
+            </div>
           }
         />
 
@@ -69,17 +68,41 @@ function App() {
         <Route
           path="/rewards"
           element={
-            <>
+            <div className="app-shell">
               <Sidebar />
               <main className="main-content">
                 <Rewards />
               </main>
-            </>
+            </div>
           }
         />
 
-      </Routes>
+        {/* Learning - With Sidebar */}
+        <Route
+          path="/learning"
+          element={
+            <div className="app-shell">
+              <Sidebar />
+              <main className="main-content">
+                <Learning />
+              </main>
+            </div>
+          }
+        />
 
+        {/* Cleaner Dashboard - With Sidebar */}
+        <Route
+          path="/cleaner"
+          element={
+            <div className="app-shell">
+              <Sidebar />
+              <main className="main-content">
+                <CleanerDashboard />
+              </main>
+            </div>
+          }
+        />
+      </Routes>
     </BrowserRouter>
   )
 }

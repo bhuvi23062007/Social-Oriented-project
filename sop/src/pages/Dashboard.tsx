@@ -1,120 +1,71 @@
 
 
-
-     import './Dashboard.css'
+const recentReports = [
+  { id: 'RPT-241', location: 'Anna Nagar, 4th Ave', status: 'Pending', date: 'Aug 12' },
+  { id: 'RPT-238', location: 'Velachery Main Rd', status: 'Resolved', date: 'Aug 09' },
+  { id: 'RPT-231', location: 'T Nagar Bus Stand', status: 'Pending', date: 'Aug 05' },
+]
 
 function Dashboard() {
   return (
-    <div className="dashboard">
-
-      <div className="dashboard-header">
+    <div className="dash-page">
+      <div className="dash-header">
         <div>
-          <h1>Welcome back! 👋</h1>
-          <p>Help keep your community clean and green.</p>
+          <h1>Welcome back</h1>
+          <p>Here's what's happening with your reports</p>
         </div>
+        <button className="dash-cta">+ Report Waste</button>
+      </div>
 
-        <div className="user-avatar">
-          👤
+      <div className="dash-stats">
+        <div className="dash-stat">
+          <div className="dash-stat-value">18</div>
+          <div className="dash-stat-label">Total Reports</div>
+        </div>
+        <div className="dash-stat">
+          <div className="dash-stat-value accent">14</div>
+          <div className="dash-stat-label">Resolved</div>
+        </div>
+        <div className="dash-stat">
+          <div className="dash-stat-value">3</div>
+          <div className="dash-stat-label">Pending</div>
+        </div>
+        <div className="dash-stat">
+          <div className="dash-stat-value">420</div>
+          <div className="dash-stat-label">Points Earned</div>
         </div>
       </div>
 
-      <div className="stats-container">
-
-        <div className="stat-card">
-          <div className="stat-icon">🗑️</div>
-          <div>
-            <h2>5</h2>
-            <p>Total Reports</p>
+      <div className="dash-grid">
+        <div className="dash-card">
+          <h3>Recent Reports</h3>
+          <div className="dash-report-list">
+            {recentReports.map((r) => (
+              <div className="dash-report-row" key={r.id}>
+                <div>
+                  <div className="dash-report-id">{r.id}</div>
+                  <div className="dash-report-loc">{r.location}</div>
+                </div>
+                <div className="dash-report-right">
+                  <span className={`report-status ${r.status === 'Pending' ? 'pending-status' : 'resolved-status'}`}>
+                    {r.status}
+                  </span>
+                  <div className="dash-report-date">{r.date}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">🏆</div>
-          <div>
-            <h2>120</h2>
-            <p>Reward Points</p>
+        <div className="dash-card">
+          <h3>Your Impact</h3>
+          <p className="dash-impact-text">Keep reporting to climb the community leaderboard.</p>
+          <div className="impact-bar">
+            <div className="impact-fill" style={{ width: '68%' }} />
           </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">✅</div>
-          <div>
-            <h2>3</h2>
-            <p>Resolved Reports</p>
-          </div>
-        </div>
-
-      </div>
-
-      <div className="dashboard-section">
-        <h2>Quick Actions</h2>
-
-        <div className="action-container">
-
-          <div className="action-card">
-            <div className="action-icon">📸</div>
-            <h3>Report Waste</h3>
-            <p>Found waste in your area? Report it and help keep your community clean.</p>
-           
-           <button onClick={() => window.location.href = '/report-waste'}>
-  Report Now
-</button> 
-          </div>
-
-          <div className="action-card">
-            <div className="action-icon">📍</div>
-            <h3>My Reports</h3>
-            <p>View your previous reports and track their current status.</p>
-           
-           <button onClick={() => window.location.href = '/my-reports'}>
-  View Reports
-</button> 
-          </div>
-
-          <div className="action-card">
-            <div className="action-icon">🎁</div>
-            <h3>Rewards</h3>
-            <p>Check your reward points and explore available rewards.</p>
-          
-          <button onClick={() => window.location.href = '/rewards'}>
-  View Rewards
-</button>  
-          </div>
-
+          <p className="dash-impact-sub">680 / 1000 points to next reward tier</p>
         </div>
       </div>
-
-      <div className="recent-reports">
-
-        <div className="section-heading">
-          <h2>Recent Reports</h2>
-          <button>View All</button>
-        </div>
-
-        <div className="report-item">
-          <div>
-            <h3>Garbage near Main Road</h3>
-            <p>📍 Main Road • 2 days ago</p>
-          </div>
-
-          <span className="status pending">
-            Pending
-          </span>
-        </div>
-
-        <div className="report-item">
-          <div>
-            <h3>Plastic waste near Park</h3>
-            <p>📍 City Park • 5 days ago</p>
-          </div>
-
-          <span className="status resolved">
-            Resolved
-          </span>
-        </div>
-
-      </div>
-
     </div>
   )
 }

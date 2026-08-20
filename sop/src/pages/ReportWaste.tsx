@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import './ReportWaste.css'
+
 
 function ReportWaste() {
   const [image, setImage] = useState<string | null>(null)

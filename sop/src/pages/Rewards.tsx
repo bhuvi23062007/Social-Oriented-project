@@ -1,4 +1,3 @@
-import './Rewards.css'
 
 function Rewards() {
   return (
