@@ -1,104 +1,196 @@
 
+import { motion, type Variants } from 'framer-motion'
+
+const earnItems = [
+  {
+    icon: '📸',
+    title: 'Report Waste',
+    desc: 'Submit a valid waste report.',
+    points: '+20',
+  },
+  {
+    icon: '📍',
+    title: 'Verified Report',
+    desc: 'Your report gets verified.',
+    points: '+30',
+  },
+  {
+    icon: '🌱',
+    title: 'Community Cleanup',
+    desc: 'Participate in cleanup activities.',
+    points: '+50',
+  },
+]
+
+const rewardItems = [
+  {
+    icon: '🌱',
+    title: 'Eco-Friendly Plant',
+    desc: 'Get a small plant for your home.',
+    points: '100',
+  },
+  {
+    icon: '🛍️',
+    title: 'Eco Shopping Bag',
+    desc: 'Reusable shopping bag for daily use.',
+    points: '150',
+  },
+  {
+    icon: '🎁',
+    title: 'Community Gift',
+    desc: 'Special reward for active contributors.',
+    points: '250',
+  },
+]
+
+const fadeUp: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+  },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.45,
+      ease: 'easeOut',
+    },
+  },
+}
+
 function Rewards() {
   return (
-    <div className="rewards-page">
-
+    <div>
       {/* Header */}
-      <div className="rewards-header">
-        <div>
-          <h1>Rewards</h1>
-          <p>Earn points by helping keep your community clean.</p>
-        </div>
+      <div className="mb-8">
+        <span className="label text-accent">Rewards</span>
+
+        <h1 className="text-3xl font-black tracking-tighter mt-1">
+          Rewards
+        </h1>
+
+        <p className="text-muted text-sm mt-1">
+          Earn points by helping keep your community clean.
+        </p>
       </div>
 
-      {/* Points Card */}
-      <div className="points-card">
-
-        <div className="points-icon">
+      {/* Available Points */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: 0.4,
+          ease: 'easeOut',
+        }}
+        className="bg-accent text-white rounded-2xl p-7 flex items-center gap-5 mb-10"
+      >
+        <span className="w-14 h-14 rounded-xl bg-white/15 flex items-center justify-center text-2xl">
           🏆
-        </div>
+        </span>
 
         <div>
-          <p>Available Points</p>
-          <h2>120 Points</h2>
-          <span>Keep reporting waste to earn more points!</span>
+          <p className="text-xs opacity-80 mb-1">
+            Available Points
+          </p>
+
+          <h2 className="text-2xl font-black tracking-tight">
+            120 Points
+          </h2>
+
+          <span className="text-xs opacity-75">
+            Keep reporting waste to earn more points!
+          </span>
         </div>
+      </motion.div>
 
-      </div>
+      {/* How to Earn Points */}
+      <section className="mb-10">
+        <h2 className="text-lg font-bold mb-4">
+          How to Earn Points
+        </h2>
 
-      {/* How to Earn */}
-      <section className="earn-section">
+        <div className="grid md:grid-cols-3 gap-4">
+          {earnItems.map((e) => (
+            <motion.div
+              key={e.title}
+              initial="hidden"
+              animate="show"
+              variants={fadeUp}
+              whileHover={{
+                y: -5,
+                borderColor: 'var(--color-accent)',
+              }}
+              className="bg-surface border border-line rounded-xl p-6 transition-colors cursor-default"
+            >
+              <span className="w-11 h-11 rounded-lg bg-accent-soft text-accent flex items-center justify-center text-lg mb-4">
+                {e.icon}
+              </span>
 
-        <h2>How to Earn Points</h2>
+              <h3 className="text-base font-bold mb-1.5">
+                {e.title}
+              </h3>
 
-        <div className="earn-container">
+              <p className="text-sm text-muted leading-relaxed mb-3">
+                {e.desc}
+              </p>
 
-          <div className="earn-card">
-            <div className="earn-icon">📸</div>
-            <h3>Report Waste</h3>
-            <p>Submit a valid waste report.</p>
-            <strong>+20 Points</strong>
-          </div>
-
-          <div className="earn-card">
-            <div className="earn-icon">📍</div>
-            <h3>Verified Report</h3>
-            <p>Your report gets verified.</p>
-            <strong>+30 Points</strong>
-          </div>
-
-          <div className="earn-card">
-            <div className="earn-icon">🌱</div>
-            <h3>Community Cleanup</h3>
-            <p>Participate in cleanup activities.</p>
-            <strong>+50 Points</strong>
-          </div>
-
+              <strong className="text-accent font-mono text-sm">
+                {e.points} Points
+              </strong>
+            </motion.div>
+          ))}
         </div>
-
       </section>
 
       {/* Available Rewards */}
-      <section className="available-rewards">
+      <section>
+        <h2 className="text-lg font-bold mb-4">
+          Available Rewards
+        </h2>
 
-        <h2>Available Rewards</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          {rewardItems.map((r) => (
+            <motion.div
+              key={r.title}
+              initial="hidden"
+              animate="show"
+              variants={fadeUp}
+              whileHover={{
+                y: -5,
+                borderColor: '#3b82f6',
+              }}
+              className="bg-surface border border-line rounded-xl p-6 transition-colors cursor-pointer"
+            >
+              {/* Reward Image / Icon */}
+              <div className="h-28 rounded-lg bg-accent-soft flex items-center justify-center text-4xl mb-4">
+                {r.icon}
+              </div>
 
-        <div className="rewards-container">
+              <h3 className="text-base font-bold mb-1.5">
+                {r.title}
+              </h3>
 
-          <div className="reward-card">
-            <div className="reward-image">🌱</div>
-            <h3>Eco-Friendly Plant</h3>
-            <p>Get a small plant for your home.</p>
-            <div className="reward-bottom">
-              <span>100 Points</span>
-              <button>Redeem</button>
-            </div>
-          </div>
+              <p className="text-sm text-muted leading-relaxed mb-4">
+                {r.desc}
+              </p>
 
-          <div className="reward-card">
-            <div className="reward-image">🛍️</div>
-            <h3>Eco Shopping Bag</h3>
-            <p>Reusable shopping bag for daily use.</p>
-            <div className="reward-bottom">
-              <span>150 Points</span>
-              <button>Redeem</button>
-            </div>
-          </div>
+              <div className="flex items-center justify-between pt-3 border-t border-line">
+                <span className="font-mono text-sm text-accent font-medium">
+                  {r.points} Points
+                </span>
 
-          <div className="reward-card">
-            <div className="reward-image">🎁</div>
-            <h3>Community Gift</h3>
-            <p>Special reward for active contributors.</p>
-            <div className="reward-bottom">
-              <span>250 Points</span>
-              <button>Redeem</button>
-            </div>
-          </div>
-
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-ink text-paper px-4 py-1.5 rounded-md text-xs font-medium hover:bg-accent hover:text-white transition-colors"
+                >
+                  Redeem
+                </motion.button>
+              </div>
+            </motion.div>
+          ))}
         </div>
-
       </section>
-
     </div>
   )
 }
