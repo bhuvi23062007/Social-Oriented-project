@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CITIZEN
+  ADMIN
+  CLEANING_STAFF
+}
+
+enum ReportStatus {
+  PENDING
+  VERIFIED
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(CITIZEN)
+  points       Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  reports             Report[]
+  rewardTransactions  RewardTransaction[]
+  notifications       Notification[]
+  cleaningTeam        CleaningTeam?        @relation(fields: [cleaningTeamId], references: [id])
+  cleaningTeamId      String?
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  description String
+  latitude    Float
+  longitude   Float
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  reporter    User   @relation(fields: [reporterId], references: [id])
+  reporterId  String
+
+  images        ReportImage[]
+  statusHistory ReportStatusHistory[]
+  assignment    Assignment?
+  rewardTransaction RewardTransaction?
+}
+
+model ReportImage {
+  id        String   @id @default(uuid())
+  url       String
+  createdAt DateTime @default(now())
+
+  report    Report @relation(fields: [reportId], references: [id])
+  reportId  String
+}
+
+model ReportStatusHistory {
+  id        String       @id @default(uuid())
+  status    ReportStatus
+  note      String?
+  changedAt DateTime     @default(now())
+
+  report    Report @relation(fields: [reportId], references: [id])
+  reportId  String
+}
+
+model CleaningTeam {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  members     User[]
+  assignments Assignment[]
+}
+
+model Assignment {
+  id           String   @id @default(uuid())
+  assignedAt   DateTime @default(now())
+  completedAt  DateTime?
+
+  report         Report       @relation(fields: [reportId], references: [id])
+  reportId       String       @unique
+
+  cleaningTeam   CleaningTeam @relation(fields: [cleaningTeamId], references: [id])
+  cleaningTeamId String
+}
+
+model RewardTransaction {
+  id        String   @id @default(uuid())
+  points    Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+
+  report    Report? @relation(fields: [reportId], references: [id])
+  reportId  String? @unique
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+}
