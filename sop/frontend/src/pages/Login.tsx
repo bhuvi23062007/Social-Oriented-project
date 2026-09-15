@@ -5,26 +5,30 @@ import ThemeToggle from '../ThemeToggle'
 import { useAuth, type Role } from '../AuthContext'
 
 const roleRoutes: Record<Role, string> = {
-  admin: '/admin',
-  cleaner: '/cleaner',
-  user: '/dashboard',
+  ADMIN: '/admin',
+  CLEANING_STAFF: '/cleaner',
+  CITIZEN: '/dashboard',
 }
 
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
     try {
-      const account = login(email, password)
+      const account = await login(email, password)
       navigate(roleRoutes[account.role])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -119,9 +123,10 @@ function Login() {
                 whileHover={{ scale: 1.015 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="w-full bg-ink text-paper py-3 rounded-md font-medium text-sm mt-2 hover:bg-accent hover:text-white transition-colors"
+                disabled={loading}
+                className="w-full bg-ink text-paper py-3 rounded-md font-medium text-sm mt-2 hover:bg-accent hover:text-white transition-colors disabled:opacity-60"
               >
-                Log in →
+                {loading ? 'Logging in…' : 'Log in →'}
               </motion.button>
             </form>
 
@@ -130,14 +135,6 @@ function Login() {
               <Link to="/register" className="text-accent font-medium hover:underline">
                 Create one
               </Link>
-            </div>
-
-            {/* Temporary — remove once real accounts/registration exist */}
-            <div className="mt-6 pt-5 border-t border-line text-xs text-muted space-y-1">
-              <p className="font-medium mb-1.5">Test accounts:</p>
-              <p>user: priya@cleancity.com / user123</p>
-              <p>cleaner: karthik@cleancity.com / cleaner123</p>
-              <p>admin: divya@cleancity.com / admin123</p>
             </div>
           </div>
         </div>

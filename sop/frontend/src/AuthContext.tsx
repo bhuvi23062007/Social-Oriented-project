@@ -1,21 +1,24 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
-import { mockAccounts } from './data/mockAccounts'
 
-export type Role = 'admin' | 'cleaner' | 'user'
+export type Role = 'ADMIN' | 'CLEANING_STAFF' | 'CITIZEN'
 
 interface AuthState {
+  userId: string
   name: string
   email: string
   role: Role
+  token: string
 }
 
 interface AuthContextValue {
   auth: AuthState | null
-  login: (email: string, password: string) => AuthState
+  login: (email: string, password: string) => Promise<AuthState>
+  register: (name: string, email: string, password: string) => Promise<AuthState>
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+const API_URL = 'http://localhost:3000'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthState | null>(() => {
@@ -23,17 +26,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored ? JSON.parse(stored) : null
   })
 
-  const login = (email: string, password: string): AuthState => {
-    const account = mockAccounts.find(
-      (a) => a.email.toLowerCase() === email.toLowerCase() && a.password === password
-    )
-    if (!account) {
-      throw new Error('Invalid email or password')
+  const login = async (email: string, password: string): Promise<AuthState> => {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    if (!res.ok) throw new Error('Invalid email or password')
+    const data = await res.json()
+
+    const meRes = await fetch(`${API_URL}/auth/me`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${data.access_token}` },
+    })
+    const me = await meRes.json()
+
+    const next: AuthState = {
+      userId: me.userId,
+      name: email,
+      email: me.email,
+      role: me.role,
+      token: data.access_token,
     }
-    const next: AuthState = { name: account.name, email: account.email, role: account.role }
     setAuth(next)
     localStorage.setItem('auth', JSON.stringify(next))
     return next
+  }
+
+  const register = async (name: string, email: string, password: string): Promise<AuthState> => {
+    const res = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    })
+    if (!res.ok) throw new Error('Registration failed')
+    return login(email, password)
   }
 
   const logout = () => {
@@ -41,7 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth')
   }
 
-  return <AuthContext.Provider value={{ auth, login, logout }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ auth, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

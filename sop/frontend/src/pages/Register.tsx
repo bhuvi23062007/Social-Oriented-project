@@ -1,10 +1,47 @@
-
-
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import ThemeToggle from '../ThemeToggle'
+import { useAuth, type Role } from '../AuthContext'
+
+const roleRoutes: Record<Role, string> = {
+  ADMIN: '/admin',
+  CLEANING_STAFF: '/cleaner',
+  CITIZEN: '/dashboard',
+}
 
 function Register() {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const { register } = useAuth()
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const name = `${firstName} ${lastName}`.trim()
+      const account = await register(name, email, password)
+      navigate(roleRoutes[account.role])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-6 relative transition-colors duration-300">
 
@@ -60,13 +97,15 @@ function Register() {
             <h2 className="text-xl font-bold tracking-tight mb-1">Create account</h2>
             <p className="text-sm text-muted mb-6">Join the CleanCity community today</p>
 
-            <form className="flex flex-col gap-4">
+            <form onSubmit={handleRegister} className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label text-muted block mb-1.5">First name</label>
                   <input
                     type="text"
                     placeholder="First name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     required
                     className="w-full border border-line rounded-md bg-surface px-3.5 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-shadow"
                   />
@@ -76,6 +115,8 @@ function Register() {
                   <input
                     type="text"
                     placeholder="Last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     required
                     className="w-full border border-line rounded-md bg-surface px-3.5 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-shadow"
                   />
@@ -87,6 +128,8 @@ function Register() {
                 <input
                   type="email"
                   placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full border border-line rounded-md bg-surface px-3.5 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-shadow"
                 />
@@ -97,6 +140,8 @@ function Register() {
                 <input
                   type="password"
                   placeholder="Create a password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full border border-line rounded-md bg-surface px-3.5 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-shadow"
                 />
@@ -107,18 +152,30 @@ function Register() {
                 <input
                   type="password"
                   placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   className="w-full border border-line rounded-md bg-surface px-3.5 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-shadow"
                 />
               </div>
 
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-glass bg-accent-soft border border-line rounded-md px-3 py-2"
+                >
+                  {error}
+                </motion.p>
+              )}
+
               <motion.button
                 whileHover={{ scale: 1.015 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="w-full bg-ink text-paper py-3 rounded-md font-medium text-sm mt-2 hover:bg-accent hover:text-white transition-colors"
+                disabled={loading}
+                className="w-full bg-ink text-paper py-3 rounded-md font-medium text-sm mt-2 hover:bg-accent hover:text-white transition-colors disabled:opacity-60"
               >
-                Create account
+                {loading ? 'Creating account…' : 'Create account'}
               </motion.button>
             </form>
 

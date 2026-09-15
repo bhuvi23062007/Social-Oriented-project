@@ -48,4 +48,37 @@ export class ReportsService {
     if (!report) throw new NotFoundException('Report not found');
     return report;
   }
+
+  async updateStatus(reportId: string, status: ReportStatus, note?: string) {
+    const report = await this.findOne(reportId);
+
+    await this.prisma.reportStatusHistory.create({
+      data: { reportId, status, note },
+    });
+
+    return this.prisma.report.update({
+      where: { id: reportId },
+      data: { status },
+      include: { images: true, statusHistory: true },
+    });
+  }
+
+  async assignTeam(reportId: string, cleaningTeamId: string) {
+    await this.findOne(reportId);
+
+    const assignment = await this.prisma.assignment.create({
+      data: { reportId, cleaningTeamId },
+    });
+
+    await this.updateStatus(reportId, ReportStatus.ASSIGNED, 'Cleaning team assigned');
+
+    return assignment;
+  }
+
+  findAssignedToTeam(cleaningTeamId: string) {
+    return this.prisma.report.findMany({
+      where: { assignment: { cleaningTeamId } },
+      include: { images: true, statusHistory: true, assignment: true },
+    });
+  }
 }
