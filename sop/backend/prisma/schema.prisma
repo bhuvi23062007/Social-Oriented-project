@@ -13,11 +13,16 @@ enum Role {
   CLEANING_STAFF
 }
 
+enum ImageType {
+  BEFORE
+  AFTER
+}
+
 enum ReportStatus {
   PENDING
-  VERIFIED
-  ASSIGNED
+  ACCEPTED
   IN_PROGRESS
+  CLEANING_COMPLETED
   RESOLVED
   REJECTED
 }
@@ -31,11 +36,11 @@ model User {
   points       Int      @default(0)
   createdAt    DateTime @default(now())
 
-  reports             Report[]
-  rewardTransactions  RewardTransaction[]
-  notifications       Notification[]
-  cleaningTeam        CleaningTeam?        @relation(fields: [cleaningTeamId], references: [id])
-  cleaningTeamId      String?
+  reports            Report[]
+  rewardTransactions RewardTransaction[]
+  notifications      Notification[]
+  cleaningTeam       CleaningTeam?       @relation(fields: [cleaningTeamId], references: [id])
+  cleaningTeamId     String?
 }
 
 model Report {
@@ -47,22 +52,23 @@ model Report {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  reporter    User   @relation(fields: [reporterId], references: [id])
-  reporterId  String
+  reporter   User   @relation(fields: [reporterId], references: [id])
+  reporterId String
 
-  images        ReportImage[]
-  statusHistory ReportStatusHistory[]
-  assignment    Assignment?
+  images            ReportImage[]
+  statusHistory     ReportStatusHistory[]
+  assignment        Assignment?
   rewardTransaction RewardTransaction?
 }
 
 model ReportImage {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   url       String
-  createdAt DateTime @default(now())
+  type      ImageType @default(BEFORE)
+  createdAt DateTime  @default(now())
 
-  report    Report @relation(fields: [reportId], references: [id])
-  reportId  String
+  report   Report @relation(fields: [reportId], references: [id])
+  reportId String
 }
 
 model ReportStatusHistory {
@@ -71,8 +77,8 @@ model ReportStatusHistory {
   note      String?
   changedAt DateTime     @default(now())
 
-  report    Report @relation(fields: [reportId], references: [id])
-  reportId  String
+  report   Report @relation(fields: [reportId], references: [id])
+  reportId String
 }
 
 model CleaningTeam {
@@ -85,12 +91,12 @@ model CleaningTeam {
 }
 
 model Assignment {
-  id           String   @id @default(uuid())
-  assignedAt   DateTime @default(now())
-  completedAt  DateTime?
+  id          String    @id @default(uuid())
+  assignedAt  DateTime  @default(now())
+  completedAt DateTime?
 
-  report         Report       @relation(fields: [reportId], references: [id])
-  reportId       String       @unique
+  report   Report @relation(fields: [reportId], references: [id])
+  reportId String @unique
 
   cleaningTeam   CleaningTeam @relation(fields: [cleaningTeamId], references: [id])
   cleaningTeamId String
@@ -102,11 +108,11 @@ model RewardTransaction {
   reason    String
   createdAt DateTime @default(now())
 
-  user      User   @relation(fields: [userId], references: [id])
-  userId    String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 
-  report    Report? @relation(fields: [reportId], references: [id])
-  reportId  String? @unique
+  report   Report? @relation(fields: [reportId], references: [id])
+  reportId String? @unique
 }
 
 model Notification {
@@ -115,6 +121,6 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user      User   @relation(fields: [userId], references: [id])
-  userId    String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 }
