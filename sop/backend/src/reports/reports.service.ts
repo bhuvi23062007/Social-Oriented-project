@@ -1,10 +1,18 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
+import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
 import { ReportStatus } from '@prisma/client';
+
+const POINTS_FOR_RESOLVED = 10;
 
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private redisService: RedisService,
+    private rabbitMQService: RabbitMQService,
+  ) {}
 
   async create(userId: string, dto: { description: string; latitude: number; longitude: number; imageUrl?: string }) {
     const report = await this.prisma.report.create({
@@ -22,6 +30,12 @@ export class ReportsService {
       },
       include: { images: true, statusHistory: true },
     });
+
+    await this.rabbitMQService.publish('report.created', {
+      reportId: report.id,
+      reporterId: report.reporterId,
+    });
+
     return report;
   }
 
@@ -56,11 +70,27 @@ export class ReportsService {
       data: { reportId, status, note },
     });
 
-    return this.prisma.report.update({
+    const updated = await this.prisma.report.update({
       where: { id: reportId },
       data: { status },
       include: { images: true, statusHistory: true },
     });
+
+    if (status === ReportStatus.RESOLVED) {
+      await this.redisService.addLeaderboardPoints(report.reporterId, POINTS_FOR_RESOLVED);
+    }
+    
+    if (status === ReportStatus.RESOLVED) {
+  await this.redisService.addLeaderboardPoints(report.reporterId, POINTS_FOR_RESOLVED);
+  await this.rabbitMQService.publish('report.resolved', {
+    reportId: report.id,
+    reporterId: report.reporterId,
+    points: POINTS_FOR_RESOLVED,
+  });
+}
+    await this.redisService.invalidateStats();
+
+    return updated;
   }
 
   async assignTeam(reportId: string, cleaningTeamId: string) {
@@ -80,5 +110,18 @@ export class ReportsService {
       where: { assignment: { cleaningTeamId } },
       include: { images: true, statusHistory: true, assignment: true },
     });
+  }
+
+  async computeStats() {
+    const [total, pending, verified, assigned, inProgress, resolved, rejected] = await Promise.all([
+      this.prisma.report.count(),
+      this.prisma.report.count({ where: { status: ReportStatus.PENDING } }),
+      this.prisma.report.count({ where: { status: ReportStatus.VERIFIED } }),
+      this.prisma.report.count({ where: { status: ReportStatus.ASSIGNED } }),
+      this.prisma.report.count({ where: { status: ReportStatus.IN_PROGRESS } }),
+      this.prisma.report.count({ where: { status: ReportStatus.RESOLVED } }),
+      this.prisma.report.count({ where: { status: ReportStatus.REJECTED } }),
+    ]);
+    return { total, pending, verified, assigned, inProgress, resolved, rejected };
   }
 }
