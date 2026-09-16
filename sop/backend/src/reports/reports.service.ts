@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
@@ -12,7 +12,7 @@ export class ReportsService {
     private prisma: PrismaService,
     private redisService: RedisService,
     private rabbitMQService: RabbitMQService,
-  ) {}
+  ) { }
 
   async create(userId: string, dto: { description: string; latitude: number; longitude: number; imageUrl?: string }) {
     const report = await this.prisma.report.create({
@@ -65,11 +65,12 @@ export class ReportsService {
 
   async updateStatus(reportId: string, status: ReportStatus, note?: string) {
     const report = await this.findOne(reportId);
-
+    if (report.status === status) {
+      throw new BadRequestException(`Report is already ${status}`);
+    }
     await this.prisma.reportStatusHistory.create({
       data: { reportId, status, note },
     });
-
     const updated = await this.prisma.report.update({
       where: { id: reportId },
       data: { status },
@@ -77,31 +78,25 @@ export class ReportsService {
     });
 
     if (status === ReportStatus.RESOLVED) {
-      await this.redisService.addLeaderboardPoints(report.reporterId, POINTS_FOR_RESOLVED);
+      await this.handleReportResolved(report);
     }
-    
-    if (status === ReportStatus.RESOLVED) {
-  await this.redisService.addLeaderboardPoints(report.reporterId, POINTS_FOR_RESOLVED);
-  await this.rabbitMQService.publish('report.resolved', {
-    reportId: report.id,
-    reporterId: report.reporterId,
-    points: POINTS_FOR_RESOLVED,
-  });
-}
     await this.redisService.invalidateStats();
-
     return updated;
   }
-
+  private async handleReportResolved(report: { id: string; reporterId: string }) {
+    await this.redisService.addLeaderboardPoints(report.reporterId, POINTS_FOR_RESOLVED);
+    await this.rabbitMQService.publish('report.resolved', {
+      reportId: report.id,
+      reporterId: report.reporterId,
+      points: POINTS_FOR_RESOLVED,
+    });
+  }
   async assignTeam(reportId: string, cleaningTeamId: string) {
     await this.findOne(reportId);
-
     const assignment = await this.prisma.assignment.create({
       data: { reportId, cleaningTeamId },
     });
-
     await this.updateStatus(reportId, ReportStatus.ASSIGNED, 'Cleaning team assigned');
-
     return assignment;
   }
 
