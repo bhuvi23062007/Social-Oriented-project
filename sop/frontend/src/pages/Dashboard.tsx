@@ -11,22 +11,33 @@ const fadeUp: Variants = {
 }
 
 const statusColor: Record<string, string> = {
-  pending: 'bg-paper-stream', awaiting_verification: 'bg-plastic', verified: 'bg-organic', rejected: 'bg-glass',
+  PENDING: 'bg-paper-stream',
+  ACCEPTED: 'bg-plastic',
+  IN_PROGRESS: 'bg-plastic',
+  CLEANING_COMPLETED: 'bg-plastic',
+  RESOLVED: 'bg-organic',
+  REJECTED: 'bg-glass',
 }
 const statusLabel: Record<string, string> = {
-  pending: 'Pending', awaiting_verification: 'Awaiting verification', verified: 'Collected', rejected: 'Rejected',
+  PENDING: 'Pending',
+  ACCEPTED: 'Accepted',
+  IN_PROGRESS: 'In progress',
+  CLEANING_COMPLETED: 'Awaiting verification',
+  RESOLVED: 'Resolved',
+  REJECTED: 'Rejected',
 }
 
 function Dashboard() {
   const { auth } = useAuth()
-  const { balance } = useCredits('user')
-  const { reports, addReport } = useReports()
-  const { unreadCount } = useNotifications('user')
+  const { balance, loading: creditsLoading } = useCredits()
+  const { reports, loading: reportsLoading } = useReports('mine')
+  const { unreadCount } = useNotifications()
 
   const firstName = auth?.name?.split(' ')[0] ?? 'there'
-  const myReports = reports.filter((r) => r.submittedBy === auth?.name)
-  const pendingCount = myReports.filter((r) => r.status === 'pending' || r.status === 'awaiting_verification').length
-  const verifiedCount = myReports.filter((r) => r.status === 'verified').length
+  const pendingCount = reports.filter((r) => ['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'CLEANING_COMPLETED'].includes(r.status)).length
+  const resolvedCount = reports.filter((r) => r.status === 'RESOLVED').length
+
+  if (reportsLoading || creditsLoading) return <p className="text-muted text-sm">Loading...</p>
 
   return (
     <div>
@@ -36,26 +47,17 @@ function Dashboard() {
           <h1 className="text-3xl font-black tracking-tighter mt-1">Welcome, {firstName}!</h1>
           <p className="text-muted text-sm mt-1">Here's what's happening with your reports</p>
         </div>
-        <div className="flex gap-2">
-          <motion.button
-            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-            onClick={() => addReport('Kilpauk Garden Rd', 'Plastic', auth?.name ?? 'Guest')}
-            className="border border-line px-4 py-2.5 rounded-md text-xs font-medium hover:border-accent transition-colors"
-          >
-            + Simulate new report
-          </motion.button>
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Link to="/report-waste" className="bg-ink text-paper px-5 py-2.5 rounded-md text-sm font-medium hover:bg-accent hover:text-white transition-colors inline-flex items-center gap-1.5">
-              + Report Waste
-            </Link>
-          </motion.div>
-        </div>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <Link to="/report-waste" className="bg-ink text-paper px-5 py-2.5 rounded-md text-sm font-medium hover:bg-accent hover:text-white transition-colors inline-flex items-center gap-1.5">
+            + Report Waste
+          </Link>
+        </motion.div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total Reports', value: String(myReports.length), to: '/my-reports' },
-          { label: 'Collected', value: String(verifiedCount), accent: true, to: '/my-reports' },
+          { label: 'Total Reports', value: String(reports.length), to: '/my-reports' },
+          { label: 'Resolved', value: String(resolvedCount), accent: true, to: '/my-reports' },
           { label: 'Pending', value: String(pendingCount), to: '/my-reports' },
           { label: 'Credits', value: String(balance), to: '/credits' },
         ].map((s, i) => (
@@ -78,22 +80,22 @@ function Dashboard() {
             <h3 className="text-base font-bold">Recent Reports</h3>
             <Link to="/my-reports" className="text-xs text-accent font-medium hover:underline">View all →</Link>
           </div>
-          {myReports.length === 0 ? (
+          {reports.length === 0 ? (
             <p className="text-sm text-muted py-6 text-center">No reports yet.</p>
           ) : (
             <div className="space-y-2.5">
-              {myReports.slice(0, 4).map((r) => (
+              {reports.slice(0, 4).map((r) => (
                 <motion.div key={r.id} whileHover={{ x: 4, borderColor: 'var(--color-accent)' }} className="flex items-center justify-between bg-paper border border-line rounded-lg px-4 py-3 transition-colors">
                   <div className="flex items-center gap-3">
                     <span className={`w-1.5 h-1.5 rounded-full ${statusColor[r.status]}`} />
                     <div>
-                      <p className="text-xs font-mono text-muted">{r.id}</p>
-                      <p className="text-sm font-medium">{r.location}</p>
+                      <p className="text-xs font-mono text-muted">#{r.id.slice(0, 8)}</p>
+                      <p className="text-sm font-medium">{r.description.split(':')[0]}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-muted">{statusLabel[r.status]}</span>
-                    <p className="text-xs text-muted mt-0.5">{r.submittedAt}</p>
+                    <p className="text-xs text-muted mt-0.5">{new Date(r.createdAt).toLocaleDateString()}</p>
                   </div>
                 </motion.div>
               ))}
@@ -108,11 +110,9 @@ function Dashboard() {
           </div>
           <Link to="/notifications" className="text-xs text-accent font-medium hover:underline">View all →</Link>
           <div className="pt-4 border-t border-line">
-            <h3 className="text-base font-bold mb-2">Your Impact</h3>
-            <div className="h-2 bg-paper border border-line rounded-full overflow-hidden">
-              <motion.div initial={{ width: 0 }} animate={{ width: '68%' }} transition={{ duration: 1, delay: 0.3 }} className="h-full bg-accent rounded-full" />
-            </div>
-            <p className="text-xs text-muted mt-2">680 / 1000 points to next reward tier</p>
+            <h3 className="text-base font-bold mb-2">Your Credits</h3>
+            <p className="text-2xl font-black tracking-tight text-accent">{balance}</p>
+            <p className="text-xs text-muted mt-2">Earned from resolved reports</p>
           </div>
         </motion.div>
       </div>

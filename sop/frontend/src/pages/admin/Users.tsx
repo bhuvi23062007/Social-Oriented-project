@@ -1,10 +1,28 @@
-const users = [
-  { name: 'Priya Sharma', email: 'priya@cleancity.com', points: 420, reports: 18, joined: 'Mar 2026' },
-  { name: 'Ravi Kumar', email: 'ravi@cleancity.com', points: 320, reports: 9, joined: 'May 2026' },
-  { name: 'Sneha Pillai', email: 'sneha@cleancity.com', points: 1150, reports: 31, joined: 'Jan 2026' },
-]
+import { useEffect, useState } from 'react'
+import { api } from '../../lib/api'
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  points: number
+  createdAt: string
+}
 
 function Users() {
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.get('/users').then((res) => {
+      setUsers(res.data)
+      setLoading(false)
+    })
+  }, [])
+
+  if (loading) return <p className="text-muted text-sm">Loading...</p>
+
   return (
     <div>
       <div className="mb-8">
@@ -20,19 +38,19 @@ function Users() {
               <tr className="border-b border-line text-left">
                 <th className="px-4 py-3 label text-muted">Name</th>
                 <th className="px-4 py-3 label text-muted">Email</th>
-                <th className="px-4 py-3 label text-muted">Reports</th>
+                <th className="px-4 py-3 label text-muted">Role</th>
                 <th className="px-4 py-3 label text-muted">Credits</th>
                 <th className="px-4 py-3 label text-muted">Joined</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.email} className="border-b border-line last:border-0 hover:bg-paper transition-colors">
+                <tr key={u.id} className="border-b border-line last:border-0 hover:bg-paper transition-colors">
                   <td className="px-4 py-3 font-medium">{u.name}</td>
                   <td className="px-4 py-3 text-muted">{u.email}</td>
-                  <td className="px-4 py-3 text-muted">{u.reports}</td>
+                  <td className="px-4 py-3 text-muted">{u.role}</td>
                   <td className="px-4 py-3 font-mono text-accent">{u.points}</td>
-                  <td className="px-4 py-3 text-muted text-xs">{u.joined}</td>
+                  <td className="px-4 py-3 text-muted text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,24 +1,30 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useReports } from '../../hooks/useReports'
-import { useMessages } from '../../hooks/useMessages'
+import { api } from '../../lib/api'
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const } } }
-const streamBreakdown = [
-  { name: 'Organic', color: 'bg-organic', pct: 38 }, { name: 'Plastic', color: 'bg-plastic', pct: 29 },
-  { name: 'Paper', color: 'bg-paper-stream', pct: 19 }, { name: 'Glass', color: 'bg-glass', pct: 14 },
-]
-const cleanerRoster = [
-  { name: 'Karthik Raj', status: 'active' }, { name: 'Arjun Dev', status: 'active' }, { name: 'Meena Iyer', status: 'offline' },
-]
+
+interface CleaningTeam {
+  id: string
+  name: string
+  members: { id: string; name: string; email: string }[]
+}
 
 function AdminHome() {
-  const { reports } = useReports()
-  const { messages } = useMessages()
+  const { reports, loading } = useReports('all')
+  const [teams, setTeams] = useState<CleaningTeam[]>([])
 
-  const verificationQueue = reports.filter((r) => r.status === 'awaiting_verification' || r.status === 'pending')
-  const activeTasks = reports.filter((r) => r.status === 'awaiting_verification')
-  const completedTasks = reports.filter((r) => r.status === 'verified')
+  useEffect(() => {
+    api.get('/cleaning-teams').then((res) => setTeams(res.data))
+  }, [])
+
+  const verificationQueue = reports.filter((r) => r.status === 'CLEANING_COMPLETED' || r.status === 'PENDING')
+  const activeTasks = reports.filter((r) => r.status === 'IN_PROGRESS' || r.status === 'ACCEPTED')
+  const completedTasks = reports.filter((r) => r.status === 'RESOLVED')
+
+  if (loading) return <p className="text-muted text-sm">Loading...</p>
 
   return (
     <div>
@@ -57,8 +63,8 @@ function AdminHome() {
               {verificationQueue.slice(0, 4).map((r) => (
                 <div key={r.id} className="flex items-center justify-between bg-paper border border-line rounded-lg px-4 py-3">
                   <div>
-                    <p className="text-xs font-mono text-muted">{r.id}</p>
-                    <p className="text-sm font-medium">{r.submittedBy} · {r.location}</p>
+                    <p className="text-xs font-mono text-muted">#{r.id.slice(0, 8)}</p>
+                    <p className="text-sm font-medium">{r.description.split(':')[0]}</p>
                   </div>
                   <span className="label text-muted">{r.status.replace('_', ' ')}</span>
                 </div>
@@ -68,16 +74,20 @@ function AdminHome() {
         </motion.div>
 
         <motion.div initial="hidden" animate="show" variants={fadeUp} transition={{ delay: 0.15 }} className="bg-surface border border-line rounded-xl p-6">
-          <h3 className="text-base font-bold mb-4">Stream Breakdown</h3>
+          <h3 className="text-base font-bold mb-4">Report Status Breakdown</h3>
           <div className="space-y-3">
-            {streamBreakdown.map((s) => (
-              <div key={s.name}>
-                <div className="flex justify-between text-xs text-muted mb-1"><span>{s.name}</span><span>{s.pct}%</span></div>
-                <div className="h-1.5 bg-paper border border-line rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${s.pct}%` }} transition={{ duration: 0.8 }} className={`h-full rounded-full ${s.color}`} />
+            {['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'CLEANING_COMPLETED', 'RESOLVED', 'REJECTED'].map((status) => {
+              const count = reports.filter((r) => r.status === status).length
+              const pct = reports.length ? Math.round((count / reports.length) * 100) : 0
+              return (
+                <div key={status}>
+                  <div className="flex justify-between text-xs text-muted mb-1"><span>{status.replace('_', ' ')}</span><span>{pct}%</span></div>
+                  <div className="h-1.5 bg-paper border border-line rounded-full overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full bg-accent" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </motion.div>
       </div>
@@ -85,24 +95,28 @@ function AdminHome() {
       <motion.div initial="hidden" animate="show" variants={fadeUp} transition={{ delay: 0.2 }} className="grid md:grid-cols-2 gap-4 mt-4">
         <div className="bg-surface border border-line rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold">Cleaners</h3>
+            <h3 className="text-base font-bold">Cleaning Teams</h3>
             <Link to="/admin/cleaners" className="text-xs text-accent font-medium hover:underline">Manage →</Link>
           </div>
           <div className="space-y-2">
-            {cleanerRoster.map((c) => (
-              <div key={c.name} className="flex items-center justify-between">
-                <span className="text-sm">{c.name}</span>
-                <span className={`w-2 h-2 rounded-full ${c.status === 'active' ? 'bg-organic' : 'bg-muted'}`} />
-              </div>
-            ))}
+            {teams.length === 0 ? (
+              <p className="text-sm text-muted">No teams yet.</p>
+            ) : (
+              teams.map((t) => (
+                <div key={t.id} className="flex items-center justify-between">
+                  <span className="text-sm">{t.name}</span>
+                  <span className="text-xs text-muted">{t.members.length} members</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
         <div className="bg-surface border border-line rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold">Recent Messages</h3>
+            <h3 className="text-base font-bold">Messages</h3>
             <Link to="/admin/messages" className="text-xs text-accent font-medium hover:underline">Send new →</Link>
           </div>
-          <p className="text-sm text-muted">{messages.length} messages sent to cleaners</p>
+          <Link to="/admin/messages" className="text-sm text-muted hover:text-accent transition-colors">Send updates to cleaning staff →</Link>
         </div>
       </motion.div>
     </div>

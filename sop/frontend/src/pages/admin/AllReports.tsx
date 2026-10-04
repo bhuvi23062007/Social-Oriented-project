@@ -1,7 +1,18 @@
 import { useReports } from '../../hooks/useReports'
 
+const statusStyles: Record<string, string> = {
+  PENDING: 'bg-accent-soft text-paper-stream',
+  ACCEPTED: 'bg-accent-soft text-accent',
+  IN_PROGRESS: 'bg-accent-soft text-accent',
+  CLEANING_COMPLETED: 'bg-accent-soft text-plastic',
+  RESOLVED: 'bg-accent-soft text-organic',
+  REJECTED: 'bg-accent-soft text-glass',
+}
+
 function AllReports() {
-  const { reports } = useReports()
+  const { reports, loading } = useReports('all')
+
+  if (loading) return <p className="text-muted text-sm">Loading...</p>
 
   return (
     <div>
@@ -17,10 +28,8 @@ function AllReports() {
             <thead>
               <tr className="border-b border-line text-left">
                 <th className="px-4 py-3 label text-muted">ID</th>
-                <th className="px-4 py-3 label text-muted">Reporter</th>
+                <th className="px-4 py-3 label text-muted">Description</th>
                 <th className="px-4 py-3 label text-muted">Location</th>
-                <th className="px-4 py-3 label text-muted">Stream</th>
-                <th className="px-4 py-3 label text-muted">Cleaner</th>
                 <th className="px-4 py-3 label text-muted">Status</th>
                 <th className="px-4 py-3 label text-muted">Date</th>
               </tr>
@@ -28,22 +37,15 @@ function AllReports() {
             <tbody>
               {reports.map((r) => (
                 <tr key={r.id} className="border-b border-line last:border-0 hover:bg-paper transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs text-muted">{r.id}</td>
-                  <td className="px-4 py-3">{r.submittedBy}</td>
-                  <td className="px-4 py-3 text-muted">{r.location}</td>
-                  <td className="px-4 py-3 text-muted">{r.stream}</td>
-                  <td className="px-4 py-3 text-muted">{r.cleanerName ?? '—'}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted">#{r.id.slice(0, 8)}</td>
+                  <td className="px-4 py-3">{r.description.split(':')[0]}</td>
+                  <td className="px-4 py-3 text-muted">{r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}</td>
                   <td className="px-4 py-3">
-                    <span className={`label px-2 py-0.5 rounded-full ${
-                      r.status === 'verified' ? 'bg-accent-soft text-organic' :
-                      r.status === 'rejected' ? 'bg-accent-soft text-glass' :
-                      r.status === 'awaiting_verification' ? 'bg-accent-soft text-plastic' :
-                      'bg-accent-soft text-paper-stream'
-                    }`}>
+                    <span className={`label px-2 py-0.5 rounded-full ${statusStyles[r.status]}`}>
                       {r.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted text-xs">{r.submittedAt}</td>
+                  <td className="px-4 py-3 text-muted text-xs">{new Date(r.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>

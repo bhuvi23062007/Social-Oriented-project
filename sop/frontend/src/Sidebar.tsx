@@ -4,7 +4,7 @@ import ThemeToggle from './ThemeToggle'
 import { useAuth, type Role } from './AuthContext'
 
 const linksByRole: Record<Role, { to: string; label: string; icon: string; end?: boolean }[]> = {
-  user: [
+  CITIZEN: [
     { to: '/dashboard', label: 'Dashboard', icon: '🏠', end: true },
     { to: '/report-waste', label: 'Report Waste', icon: '📍' },
     { to: '/my-reports', label: 'My Reports', icon: '📋' },
@@ -13,14 +13,14 @@ const linksByRole: Record<Role, { to: string; label: string; icon: string; end?:
     { to: '/learning', label: 'Learn', icon: '🎓' },
     { to: '/rewards', label: 'Rewards', icon: '🏆' },
   ],
-  cleaner: [
+  CLEANING_STAFF: [
     { to: '/cleaner', label: 'Dashboard', icon: '🏠', end: true },
     { to: '/cleaner/tasks', label: 'My Tasks', icon: '📋' },
     { to: '/cleaner/urgent', label: 'Urgent Requests', icon: '⚠️' },
     { to: '/cleaner/messages', label: 'Messages', icon: '💬' },
     { to: '/cleaner/credits', label: 'Credits', icon: '⭐' },
   ],
-  admin: [
+  ADMIN: [
     { to: '/admin', label: 'Overview', icon: '🏠', end: true },
     { to: '/admin/verify', label: 'Verify Reports', icon: '✅' },
     { to: '/admin/reports', label: 'All Reports', icon: '📋' },
@@ -34,7 +34,7 @@ const linksByRole: Record<Role, { to: string; label: string; icon: string; end?:
 function Sidebar() {
   const { auth, logout } = useAuth()
   const navigate = useNavigate()
-  const role = auth?.role ?? 'user'
+  const role = auth?.role ?? 'CITIZEN'
   const links = linksByRole[role]
 
   const handleLogout = () => {

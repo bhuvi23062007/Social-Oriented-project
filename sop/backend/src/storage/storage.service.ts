@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as Minio from 'minio';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -19,12 +20,23 @@ export class StorageService implements OnModuleInit {
 
     if (!exists) {
       await this.client.makeBucket(this.bucket);
+
+      const policy = {
+        Version: '2012-10-17',
+        Statement: [{
+          Effect: 'Allow',
+          Principal: { AWS: ['*'] },
+          Action: ['s3:GetObject'],
+          Resource: [`arn:aws:s3:::${this.bucket}/*`],
+        }],
+      };
+      await this.client.setBucketPolicy(this.bucket, JSON.stringify(policy));
     }
   }
 
   async upload(file: any, folder: string) {
     const extension = file.originalname.split('.').pop();
-    const filename = `${folder}/${crypto.randomUUID()}.${extension}`;
+    const filename = `${folder}/${randomUUID()}.${extension}`;
 
     await this.client.putObject(this.bucket, filename, file.buffer, file.size, {
       'Content-Type': file.mimetype,

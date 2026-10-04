@@ -29,6 +29,14 @@ export class UsersService {
     });
   }
 
+  assignTeam(userId: string, cleaningTeamId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { cleaningTeamId },
+      select: { id: true, name: true, email: true, cleaningTeamId: true },
+    });
+  }
+
   async getLeaderboard() {
     const cached = await this.redis.get('leaderboard');
     if (cached) return JSON.parse(cached);

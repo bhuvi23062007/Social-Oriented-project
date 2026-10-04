@@ -1,5 +1,6 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { AssignUserTeamDto } from './dto/assign-team.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -19,5 +20,12 @@ export class UsersController {
   @Get()
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @Patch(':id/team')
+  assignTeam(@Param('id') id: string, @Body() dto: AssignUserTeamDto) {
+    return this.usersService.assignTeam(id, dto.cleaningTeamId);
   }
 }

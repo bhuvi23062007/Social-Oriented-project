@@ -48,32 +48,32 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* User */}
-        <Route path="/dashboard" element={<ProtectedRoute allow={['user']}>{withSidebar(<Dashboard />)}</ProtectedRoute>} />
-        <Route path="/report-waste" element={<ProtectedRoute allow={['user']}>{withSidebar(<ReportWaste />)}</ProtectedRoute>} />
-        <Route path="/my-reports" element={<ProtectedRoute allow={['user']}>{withSidebar(<MyReports />)}</ProtectedRoute>} />
-        <Route path="/credits" element={<ProtectedRoute allow={['user']}>{withSidebar(<UserCredits />)}</ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute allow={['user']}>{withSidebar(<UserNotifications />)}</ProtectedRoute>} />
-        <Route path="/rewards" element={<ProtectedRoute allow={['user']}>{withSidebar(<Rewards />)}</ProtectedRoute>} />
+        {/* Citizen */}
+        <Route path="/dashboard" element={<ProtectedRoute allow={['CITIZEN']}>{withSidebar(<Dashboard />)}</ProtectedRoute>} />
+        <Route path="/report-waste" element={<ProtectedRoute allow={['CITIZEN']}>{withSidebar(<ReportWaste />)}</ProtectedRoute>} />
+        <Route path="/my-reports" element={<ProtectedRoute allow={['CITIZEN']}>{withSidebar(<MyReports />)}</ProtectedRoute>} />
+        <Route path="/credits" element={<ProtectedRoute allow={['CITIZEN']}>{withSidebar(<UserCredits />)}</ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute allow={['CITIZEN']}>{withSidebar(<UserNotifications />)}</ProtectedRoute>} />
+        <Route path="/rewards" element={<ProtectedRoute allow={['CITIZEN']}>{withSidebar(<Rewards />)}</ProtectedRoute>} />
 
         {/* Cleaner */}
-        <Route path="/cleaner" element={<ProtectedRoute allow={['cleaner']}>{withSidebar(<CleanerHome />)}</ProtectedRoute>} />
-        <Route path="/cleaner/tasks" element={<ProtectedRoute allow={['cleaner']}>{withSidebar(<MyTasks />)}</ProtectedRoute>} />
-        <Route path="/cleaner/urgent" element={<ProtectedRoute allow={['cleaner']}>{withSidebar(<UrgentRequests />)}</ProtectedRoute>} />
-        <Route path="/cleaner/messages" element={<ProtectedRoute allow={['cleaner']}>{withSidebar(<CleanerMessages />)}</ProtectedRoute>} />
-        <Route path="/cleaner/credits" element={<ProtectedRoute allow={['cleaner']}>{withSidebar(<CleanerCredits />)}</ProtectedRoute>} />
+        <Route path="/cleaner" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<CleanerHome />)}</ProtectedRoute>} />
+        <Route path="/cleaner/tasks" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<MyTasks />)}</ProtectedRoute>} />
+        <Route path="/cleaner/urgent" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<UrgentRequests />)}</ProtectedRoute>} />
+        <Route path="/cleaner/messages" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<CleanerMessages />)}</ProtectedRoute>} />
+        <Route path="/cleaner/credits" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<CleanerCredits />)}</ProtectedRoute>} />
 
         {/* Admin */}
-        <Route path="/admin" element={<ProtectedRoute allow={['admin']}>{withSidebar(<AdminHome />)}</ProtectedRoute>} />
-        <Route path="/admin/verify" element={<ProtectedRoute allow={['admin']}>{withSidebar(<VerifyReports />)}</ProtectedRoute>} />
-        <Route path="/admin/reports" element={<ProtectedRoute allow={['admin']}>{withSidebar(<AllReports />)}</ProtectedRoute>} />
-        <Route path="/admin/cleaners" element={<ProtectedRoute allow={['admin']}>{withSidebar(<Cleaners />)}</ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute allow={['admin']}>{withSidebar(<Users />)}</ProtectedRoute>} />
-        <Route path="/admin/messages" element={<ProtectedRoute allow={['admin']}>{withSidebar(<AdminMessages />)}</ProtectedRoute>} />
-        <Route path="/admin/notifications" element={<ProtectedRoute allow={['admin']}>{withSidebar(<AdminNotifications />)}</ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allow={['ADMIN']}>{withSidebar(<AdminHome />)}</ProtectedRoute>} />
+        <Route path="/admin/verify" element={<ProtectedRoute allow={['ADMIN']}>{withSidebar(<VerifyReports />)}</ProtectedRoute>} />
+        <Route path="/admin/reports" element={<ProtectedRoute allow={['ADMIN']}>{withSidebar(<AllReports />)}</ProtectedRoute>} />
+        <Route path="/admin/cleaners" element={<ProtectedRoute allow={['ADMIN']}>{withSidebar(<Cleaners />)}</ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute allow={['ADMIN']}>{withSidebar(<Users />)}</ProtectedRoute>} />
+        <Route path="/admin/messages" element={<ProtectedRoute allow={['ADMIN']}>{withSidebar(<AdminMessages />)}</ProtectedRoute>} />
+        <Route path="/admin/notifications" element={<ProtectedRoute allow={['ADMIN']}>{withSidebar(<AdminNotifications />)}</ProtectedRoute>} />
 
         {/* Shared */}
-        <Route path="/learning" element={<ProtectedRoute allow={['user', 'cleaner', 'admin']}>{withSidebar(<Learning />)}</ProtectedRoute>} />
+        <Route path="/learning" element={<ProtectedRoute allow={['CITIZEN', 'CLEANING_STAFF', 'ADMIN']}>{withSidebar(<Learning />)}</ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )

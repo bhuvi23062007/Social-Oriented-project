@@ -1,25 +1,18 @@
-import { useCredits } from '../../hooks/useCredits'
 import { useReports } from '../../hooks/useReports'
 
 function VerifyReports() {
-  const userCredits = useCredits('user')
-  const cleanerCredits = useCredits('cleaner')
-  const { reports, approve, reject } = useReports()
+  const { reports, loading, updateStatus } = useReports('all')
 
-  const queue = reports.filter((r) => r.status === 'awaiting_verification' || r.status === 'pending')
+  const queue = reports.filter((r) => r.status === 'CLEANING_COMPLETED' || r.status === 'PENDING')
 
-  const handleApprove = (report: (typeof reports)[number]) => {
-    approve(report.id)
-    userCredits.award(20, `Waste report verified — ${report.id}`)
-    if (report.cleanerName) cleanerCredits.award(30, `Cleanup task verified — ${report.id}`)
-  }
+  if (loading) return <p className="text-muted text-sm">Loading...</p>
 
   return (
     <div>
       <div className="mb-8">
         <span className="label text-accent">Verification</span>
         <h1 className="text-3xl font-black tracking-tighter mt-1">Verify Reports</h1>
-        <p className="text-muted text-sm mt-1">Approving here is the only way credits are issued to users and cleaners</p>
+        <p className="text-muted text-sm mt-1">Resolving here is the only way credits are issued to citizens</p>
       </div>
 
       {queue.length === 0 ? (
@@ -29,20 +22,23 @@ function VerifyReports() {
           {queue.map((r) => (
             <div key={r.id} className="flex items-center justify-between bg-surface border border-line rounded-lg px-4 py-3.5 flex-wrap gap-2">
               <div>
-                <p className="text-xs font-mono text-muted">{r.id}</p>
-                <p className="text-sm font-medium">
-                  {r.submittedBy} · {r.location}
-                  {r.cleanerName && <span className="text-muted"> · collected by {r.cleanerName}</span>}
-                </p>
+                <p className="text-xs font-mono text-muted">#{r.id.slice(0, 8)}</p>
+                <p className="text-sm font-medium">{r.description.split(':')[0]}</p>
                 <span className="label text-muted mt-0.5 inline-block">
-                  {r.status === 'pending' ? 'Not yet picked up' : 'Pickup reported — awaiting review'}
+                  {r.status === 'PENDING' ? 'Not yet picked up' : 'Cleaning completed — awaiting review'}
                 </span>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleApprove(r)} className="bg-ink text-paper px-4 py-1.5 rounded-md text-xs font-medium hover:bg-accent hover:text-white transition-colors">
-                  Approve{r.cleanerName ? ' · +20/+30' : ' · +20'}
+                <button
+                  onClick={() => updateStatus(r.id, 'RESOLVED', 'Verified and resolved by admin')}
+                  className="bg-ink text-paper px-4 py-1.5 rounded-md text-xs font-medium hover:bg-accent hover:text-white transition-colors"
+                >
+                  Approve · +10
                 </button>
-                <button onClick={() => reject(r.id)} className="border border-line px-4 py-1.5 rounded-md text-xs font-medium hover:border-glass transition-colors">
+                <button
+                  onClick={() => updateStatus(r.id, 'REJECTED', 'Rejected by admin')}
+                  className="border border-line px-4 py-1.5 rounded-md text-xs font-medium hover:border-glass transition-colors"
+                >
                   Reject
                 </button>
               </div>
