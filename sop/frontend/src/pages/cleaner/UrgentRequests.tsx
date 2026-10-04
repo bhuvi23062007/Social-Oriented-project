@@ -1,10 +1,10 @@
 import { useMessages } from '../../hooks/useMessages'
 
-const CLEANER_NAME = 'Karthik Raj'
-
 function UrgentRequests() {
-  const { messages, updateStatus } = useMessages()
-  const urgent = messages.filter((m) => m.cleanerName === CLEANER_NAME && m.priority === 'urgent')
+  const { messages, loading, updateStatus } = useMessages('mine')
+  const urgent = messages.filter((m) => m.priority === 'URGENT')
+
+  if (loading) return <p className="text-muted text-sm">Loading...</p>
 
   return (
     <div>
@@ -26,17 +26,17 @@ function UrgentRequests() {
                   <div>
                     <p className="text-sm font-bold">{m.location}</p>
                     <p className="text-sm text-muted mt-1">{m.body}</p>
-                    <p className="text-xs text-muted mt-2">{m.sentAt}</p>
+                    <p className="text-xs text-muted mt-2">{new Date(m.createdAt).toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
-                  {m.status === 'unread' && (
-                    <button onClick={() => updateStatus(m.id, 'accepted')} className="bg-ink text-paper px-4 py-1.5 rounded-md text-xs font-medium hover:bg-accent hover:text-white transition-colors">
+                  {m.status === 'UNREAD' && (
+                    <button onClick={() => updateStatus(m.id, 'ACCEPTED')} className="bg-ink text-paper px-4 py-1.5 rounded-md text-xs font-medium hover:bg-accent hover:text-white transition-colors">
                       Accept & Start
                     </button>
                   )}
-                  {m.status !== 'unread' && (
-                    <span className="label px-2.5 py-1.5 rounded-full bg-accent-soft text-muted capitalize">{m.status.replace('_', ' ')}</span>
+                  {m.status !== 'UNREAD' && (
+                    <span className="label px-2.5 py-1.5 rounded-full bg-accent-soft text-muted capitalize">{m.status.toLowerCase().replace('_', ' ')}</span>
                   )}
                 </div>
               </div>

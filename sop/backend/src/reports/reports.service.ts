@@ -101,6 +101,16 @@ export class ReportsService {
     return assignment;
   }
 
+  async findAssignedToMyTeam(userId: string) {
+  const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.cleaningTeamId) return [];
+
+  return this.prisma.report.findMany({
+    where: { assignment: { cleaningTeamId: user.cleaningTeamId } },
+    include: { images: true, statusHistory: true, assignment: true },
+    orderBy: { createdAt: 'desc' },
+  });
+}
   findAssignedToTeam(cleaningTeamId: string) {
     return this.prisma.report.findMany({
       where: { assignment: { cleaningTeamId } },

@@ -26,6 +26,11 @@ export class ReportsController {
         return this.reportsService.findMyReports(req.user.userId);
     }
 
+    @Get('team/mine')
+myTeamReports(@Request() req: any) {
+  return this.reportsService.findAssignedToMyTeam(req.user.userId);
+}
+
     @Roles('ADMIN')
     @Get('admin/stats')
     async getStats() {
