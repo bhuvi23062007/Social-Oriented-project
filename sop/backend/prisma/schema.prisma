@@ -27,6 +27,30 @@ enum ReportStatus {
   REJECTED
 }
 
+enum MessagePriority {
+  NORMAL
+  URGENT
+}
+
+enum MessageStatus {
+  UNREAD
+  ACCEPTED
+  IN_PROGRESS
+  DONE
+}
+
+model Message {
+  id        String          @id @default(uuid())
+  location  String
+  body      String
+  priority  MessagePriority @default(NORMAL)
+  status    MessageStatus   @default(UNREAD)
+  createdAt DateTime        @default(now())
+
+  cleaner   User   @relation(fields: [cleanerId], references: [id])
+  cleanerId String
+}
+
 model User {
   id           String   @id @default(uuid())
   name         String
@@ -41,6 +65,7 @@ model User {
   notifications      Notification[]
   cleaningTeam       CleaningTeam?       @relation(fields: [cleaningTeamId], references: [id])
   cleaningTeamId     String?
+  messages Message[]
 }
 
 model Report {

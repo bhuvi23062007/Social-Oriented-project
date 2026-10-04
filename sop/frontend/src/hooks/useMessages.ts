@@ -1,70 +1,44 @@
 import { useEffect, useState, useCallback } from 'react'
+import { api } from '../lib/api'
 
-export type MessageStatus = 'unread' | 'accepted' | 'in_progress' | 'done'
-export type Priority = 'normal' | 'urgent'
+export type MessageStatus = 'UNREAD' | 'ACCEPTED' | 'IN_PROGRESS' | 'DONE'
+export type Priority = 'NORMAL' | 'URGENT'
 
 export interface CleanerMessage {
   id: string
-  cleanerName: string
   location: string
   body: string
   priority: Priority
   status: MessageStatus
-  sentAt: string
+  createdAt: string
+  cleaner?: { id: string; name: string }
 }
 
-const STORAGE_KEY = 'cleaner_messages'
+export function useMessages(scope: 'mine' | 'all' = 'mine') {
+  const [messages, setMessages] = useState<CleanerMessage[]>([])
+  const [loading, setLoading] = useState(true)
 
-const defaultMessages: CleanerMessage[] = [
-  {
-    id: 'MSG-001',
-    cleanerName: 'Karthik Raj',
-    location: 'Nungambakkam High Rd',
-    body: 'Urgent cleaning required in this area. Overflowing bin reported by 3 residents. Please clean immediately.',
-    priority: 'urgent',
-    status: 'unread',
-    sentAt: '11:05 AM',
-  },
-]
-
-function load(): CleanerMessage[] {
-  const stored = localStorage.getItem(STORAGE_KEY)
-  return stored ? JSON.parse(stored) : defaultMessages
-}
-
-const listeners: (() => void)[] = []
-function notify() {
-  listeners.forEach((fn) => fn())
-}
-
-export function useMessages() {
-  const [messages, setMessages] = useState<CleanerMessage[]>(() => load())
+  const fetchMessages = useCallback(async () => {
+    setLoading(true)
+    const url = scope === 'all' ? '/messages' : '/messages/mine'
+    const res = await api.get(url)
+    setMessages(res.data)
+    setLoading(false)
+  }, [scope])
 
   useEffect(() => {
-    const handler = () => setMessages(load())
-    listeners.push(handler)
-    return () => {
-      const idx = listeners.indexOf(handler)
-      if (idx > -1) listeners.splice(idx, 1)
-    }
-  }, [])
+    fetchMessages()
+  }, [fetchMessages])
 
-  const save = (next: CleanerMessage[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    setMessages(next)
-    notify()
-  }
+  const sendMessage = useCallback(async (cleanerId: string, location: string, body: string, priority: Priority) => {
+    await api.post('/messages', { cleanerId, location, body, priority })
+    await fetchMessages()
+  }, [fetchMessages])
 
-  const sendMessage = useCallback((cleanerName: string, location: string, body: string, priority: Priority) => {
-    const current = load()
-    const id = `MSG-${Math.floor(100 + Math.random() * 900)}`
-    save([{ id, cleanerName, location, body, priority, status: 'unread', sentAt: 'Just now' }, ...current])
-  }, [])
+  const updateStatus = useCallback(async (id: string, status: MessageStatus) => {
+    await api.patch(`/messages/${id}/status`, { status })
+    await fetchMessages()
+  }, [fetchMessages])
 
-  const updateStatus = useCallback((id: string, status: MessageStatus) => {
-    const current = load()
-    save(current.map((m) => (m.id === id ? { ...m, status } : m)))
-  }, [])
-
-  return { messages, sendMessage, updateStatus }
+  return { messages, loading, sendMessage, updateStatus, refetch: fetchMessages }
 }
