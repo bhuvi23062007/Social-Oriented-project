@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
+import { api } from './lib/api'
 
 export type Role = 'ADMIN' | 'CLEANING_STAFF' | 'CITIZEN'
 
@@ -18,7 +19,11 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
-const API_URL = 'http://localhost:3000'
+
+function decodeToken(token: string): { sub: string; email: string; role: Role } {
+  const payload = JSON.parse(atob(token.split('.')[1]))
+  return payload
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthState | null>(() => {
@@ -27,26 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   const login = async (email: string, password: string): Promise<AuthState> => {
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-    if (!res.ok) throw new Error('Invalid email or password')
-    const data = await res.json()
-
-    const meRes = await fetch(`${API_URL}/auth/me`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${data.access_token}` },
-    })
-    const me = await meRes.json()
+    const res = await api.post('/auth/login', { email, password })
+    const token = res.data.access_token
+    const payload = decodeToken(token)
 
     const next: AuthState = {
-      userId: me.userId,
+      userId: payload.sub,
       name: email,
-      email: me.email,
-      role: me.role,
-      token: data.access_token,
+      email: payload.email,
+      role: payload.role,
+      token,
     }
     setAuth(next)
     localStorage.setItem('auth', JSON.stringify(next))
@@ -54,12 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const register = async (name: string, email: string, password: string): Promise<AuthState> => {
-    const res = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
-    })
-    if (!res.ok) throw new Error('Registration failed')
+    await api.post('/auth/register', { name, email, password })
     return login(email, password)
   }
 

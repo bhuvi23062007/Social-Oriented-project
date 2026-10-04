@@ -7,9 +7,12 @@ import { ReportsModule } from './reports/reports.module';
 import { RedisModule } from './redis/redis.module';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 import { StorageModule } from './storage/storage.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { RewardsModule } from './rewards/rewards.module';
+import { CleaningTeamsModule } from './cleaning-teams/cleaning-teams.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, ReportsModule, RedisModule, RabbitMQModule, StorageModule],
+  imports: [PrismaModule, AuthModule, UsersModule, ReportsModule, RedisModule, RabbitMQModule, StorageModule, NotificationsModule, RewardsModule, CleaningTeamsModule],
   controllers: [AppController],
   providers: [],
 })

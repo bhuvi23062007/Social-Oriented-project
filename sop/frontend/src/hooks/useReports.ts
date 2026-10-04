@@ -1,82 +1,50 @@
 import { useEffect, useState, useCallback } from 'react'
+import { api } from '../lib/api'
 
-export type ReportStatus = 'pending' | 'awaiting_verification' | 'verified' | 'rejected'
+export type ReportStatus = 'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'CLEANING_COMPLETED' | 'RESOLVED' | 'REJECTED'
 
 export interface Report {
   id: string
-  location: string
-  stream: string
-  submittedBy: string
-  cleanerName: string | null
+  description: string
+  latitude: number
+  longitude: number
   status: ReportStatus
-  submittedAt: string
+  reporterId: string
+  createdAt: string
+  images: { url: string }[]
+  statusHistory: { status: ReportStatus; note?: string; changedAt: string }[]
 }
 
-const STORAGE_KEY = 'reports_store'
+export function useReports(scope: 'mine' | 'all' = 'mine') {
+  const [reports, setReports] = useState<Report[]>([])
+  const [loading, setLoading] = useState(true)
 
-const defaultReports: Report[] = [
-  { id: 'RPT-241', location: 'Anna Nagar, 4th Ave', stream: 'Plastic', submittedBy: 'Priya Sharma', cleanerName: null, status: 'pending', submittedAt: 'Aug 12, 2026' },
-  { id: 'RPT-238', location: 'Velachery Main Rd', stream: 'Organic', submittedBy: 'Priya Sharma', cleanerName: 'Karthik Raj', status: 'verified', submittedAt: 'Aug 09, 2026' },
-  { id: 'RPT-231', location: 'T Nagar Bus Stand', stream: 'Paper', submittedBy: 'Priya Sharma', cleanerName: null, status: 'pending', submittedAt: 'Aug 05, 2026' },
-]
-
-function load(): Report[] {
-  const stored = localStorage.getItem(STORAGE_KEY)
-  return stored ? JSON.parse(stored) : defaultReports
-}
-
-const listeners: (() => void)[] = []
-function notify() {
-  listeners.forEach((fn) => fn())
-}
-
-export function useReports() {
-  const [reports, setReports] = useState<Report[]>(() => load())
+  const fetchReports = useCallback(async () => {
+    setLoading(true)
+    const url = scope === 'all' ? '/reports' : '/reports/mine'
+    const res = await api.get(url)
+    setReports(res.data)
+    setLoading(false)
+  }, [scope])
 
   useEffect(() => {
-    const handler = () => setReports(load())
-    listeners.push(handler)
-    return () => {
-      const idx = listeners.indexOf(handler)
-      if (idx > -1) listeners.splice(idx, 1)
-    }
-  }, [])
+    fetchReports()
+  }, [fetchReports])
 
-  const save = (next: Report[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    setReports(next)
-    notify()
-  }
+  const addReport = useCallback(async (description: string, latitude: number, longitude: number, imageUrl?: string) => {
+    await api.post('/reports', { description, latitude, longitude, imageUrl })
+    await fetchReports()
+  }, [fetchReports])
 
-  const addReport = useCallback((location: string, stream: string, submittedBy: string) => {
-    const current = load()
-    const id = `RPT-${Math.floor(200 + Math.random() * 700)}`
-    const next: Report[] = [
-      { id, location, stream, submittedBy, cleanerName: null, status: 'pending', submittedAt: 'Just now' },
-      ...current,
-    ]
-    save(next)
-  }, [])
+  const updateStatus = useCallback(async (id: string, status: ReportStatus, note?: string) => {
+    await api.patch(`/reports/${id}/status`, { status, note })
+    await fetchReports()
+  }, [fetchReports])
 
-  // Cleaner marks a report as collected — moves it to awaiting_verification, no credits yet
-  const markCollected = useCallback((id: string, cleanerName: string) => {
-    const current = load()
-    const next = current.map((r) => (r.id === id ? { ...r, status: 'awaiting_verification' as ReportStatus, cleanerName } : r))
-    save(next)
-  }, [])
+  const assignTeam = useCallback(async (id: string, cleaningTeamId: string) => {
+    await api.post(`/reports/${id}/assign`, { cleaningTeamId })
+    await fetchReports()
+  }, [fetchReports])
 
-  // Admin approves — this is the ONLY place status becomes 'verified'
-  const approve = useCallback((id: string) => {
-    const current = load()
-    const next = current.map((r) => (r.id === id ? { ...r, status: 'verified' as ReportStatus } : r))
-    save(next)
-  }, [])
-
-  const reject = useCallback((id: string) => {
-    const current = load()
-    const next = current.map((r) => (r.id === id ? { ...r, status: 'rejected' as ReportStatus } : r))
-    save(next)
-  }, [])
-
-  return { reports, addReport, markCollected, approve, reject }
+  return { reports, loading, addReport, updateStatus, assignTeam, refetch: fetchReports }
 }

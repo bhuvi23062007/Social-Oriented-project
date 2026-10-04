@@ -22,6 +22,13 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
+  findAll() {
+    return this.prisma.user.findMany({
+      select: { id: true, name: true, email: true, role: true, points: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getLeaderboard() {
     const cached = await this.redis.get('leaderboard');
     if (cached) return JSON.parse(cached);
