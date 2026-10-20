@@ -29,7 +29,7 @@ export class MessagesController {
   }
 
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateMessageStatusDto) {
-    return this.messagesService.updateStatus(id, dto.status);
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateMessageStatusDto, @Request() req: any) {
+    return this.messagesService.updateStatus(id, dto.status, req.user);
   }
 }

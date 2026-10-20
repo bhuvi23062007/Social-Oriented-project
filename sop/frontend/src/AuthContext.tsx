@@ -20,7 +20,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-function decodeToken(token: string): { sub: string; email: string; role: Role } {
+function decodeToken(token: string): { sub: string; email: string; role: Role; name?: string } {
   const base64Url = token.split('.')[1]
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
   const jsonPayload = decodeURIComponent(
@@ -31,6 +31,11 @@ function decodeToken(token: string): { sub: string; email: string; role: Role } 
   )
   return JSON.parse(jsonPayload)
 }
+function apiError(e: any, fallback: string): string {
+  if (e?.response?.status === 401) return 'Wrong email or password'
+  const m = e?.response?.data?.message
+  return (Array.isArray(m) ? m[0] : m) || (e?.response ? fallback : 'Cannot reach the server')
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthState | null>(() => {
@@ -39,13 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   const login = async (email: string, password: string): Promise<AuthState> => {
-    const res = await api.post('/auth/login', { email, password })
+        const res = await api.post('/auth/login', { email, password }).catch((e) => {
+      throw new Error(apiError(e, 'Login failed'))
+    })
     const token = res.data.access_token
     const payload = decodeToken(token)
 
     const next: AuthState = {
       userId: payload.sub,
-      name: email,
+            name: payload.name ?? email,
       email: payload.email,
       role: payload.role,
       token,
@@ -56,7 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const register = async (name: string, email: string, password: string): Promise<AuthState> => {
-    await api.post('/auth/register', { name, email, password })
+        await api.post('/auth/register', { name, email, password }).catch((e) => {
+      throw new Error(apiError(e, 'Registration failed'))
+    })
     return login(email, password)
   }
 

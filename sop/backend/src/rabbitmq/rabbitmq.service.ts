@@ -31,7 +31,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
   constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
-    this.connection = await amqp.connect('amqp://admin:pass123@localhost:5672');
+    this.connection = await amqp.connect(process.env.RABBITMQ_URL ?? 'amqp://admin:pass123@localhost:5672');
     this.channel = await this.connection.createChannel();
     await this.channel.assertExchange(this.exchange, 'topic', { durable: true });
     this.logger.log('RabbitMQ connected');

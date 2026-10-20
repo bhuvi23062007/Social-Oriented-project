@@ -88,7 +88,6 @@ function ActiveTask() {
   const dest = { lat: task.latitude, lng: task.longitude }
   const remaining = route ? route.distance : (distM ?? 0)
   const pct = total ? Math.min(100, Math.max(0, (1 - remaining / total) * 100)) : 0
-  const waitMin = Math.max(0, task.minJobMinutes - (now - new Date(task.assignment.assignedAt).getTime()) / 60000)
 
   // OSRM: a step's text is what to do at its START, so the next manoeuvre is step[1]
   const next = route ? (route.steps[1] ?? route.steps[0]) : null
@@ -106,8 +105,6 @@ function ActiveTask() {
   let cta = { label: '', cls: '', disabled: true }
   if (!pos) cta = { label: 'Waiting for GPS...', cls: 'bg-white/10 text-white/60', disabled: true }
   else if (!onSite) cta = { label: `${fmtDist(distM ?? 0)} to the spot`, cls: 'bg-white/10 text-white/70', disabled: true }
-  else if (waitMin > 0)
-    cta = { label: `At the spot · finish in ${Math.ceil(waitMin)} min`, cls: 'bg-amber-500/20 text-amber-300', disabled: true }
   else if (!file) cta = { label: 'Take after photo', cls: 'bg-emerald-500 text-white', disabled: false }
   else cta = { label: busy ? 'Submitting...' : 'Complete task', cls: 'bg-emerald-500 text-white', disabled: busy }
 

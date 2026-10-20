@@ -45,7 +45,7 @@ export class StorageService implements OnModuleInit {
       'Content-Type': file.mimetype,
     });
 
-    const url = `http://localhost:9000/${this.bucket}/${filename}`;
+    const url = `${process.env.MINIO_PUBLIC_URL ?? 'http://localhost:9000'}/${this.bucket}/${filename}`;
     // remember the uploader so completion can only use their own fresh photo
     await this.redis.set(`upload:${url}`, userId, 'EX', 7200);
     return url;

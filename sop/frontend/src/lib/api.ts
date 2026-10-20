@@ -10,3 +10,15 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
+
+api.interceptors.response.use(
+  (r) => r,
+  (err) => {
+    const isAuthCall = String(err?.config?.url ?? '').startsWith('/auth/')
+    if (err?.response?.status === 401 && !isAuthCall) {
+      localStorage.removeItem('auth')
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  },
+)

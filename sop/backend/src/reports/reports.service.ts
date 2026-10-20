@@ -17,6 +17,7 @@ import {
   CLEANER_ONLINE_MINUTES,
   distanceKm,
 } from './waste.constants';
+import { WasteClassifierService } from './waste-classifier.service';
 
 const REPORTER_SELECT = { id: true, name: true, email: true };
 
@@ -26,28 +27,39 @@ export class ReportsService {
     private prisma: PrismaService,
     private redisService: RedisService,
     private rabbitMQService: RabbitMQService,
+    private classifier: WasteClassifierService,
   ) {}
 
-  async create(
-    userId: string,
-    dto: { description: string; latitude: number; longitude: number; imageUrl?: string; wasteType?: WasteType },
-  ) {
+    async create(userId: string, dto: { description: string; latitude: number; longitude: number; imageUrl: string }) {
+    // photo must be a fresh upload by this user (also blocks fake image URLs)
+    const key = `upload:${dto.imageUrl}`;
+    if ((await this.redisService.get(key)) !== userId) {
+      throw new BadRequestException('Please upload a fresh photo of the waste');
+    }
+
+    const ai = await this.classifier.classifyUrl(dto.imageUrl);
+    if (ai && !ai.isWaste && ai.confidence >= 0.6) {
+      throw new BadRequestException("We couldn't see any waste in this photo. Take a clear photo of the waste.");
+    }
+    const wasteType = ai?.wasteType ?? WasteType.LITTER;
+    const note = ai
+      ? `Report created · AI: ${ai.wasteType} (${Math.round(ai.confidence * 100)}%)`
+      : 'Report created';
+
     const report = await this.prisma.report.create({
       data: {
         description: dto.description,
         latitude: dto.latitude,
         longitude: dto.longitude,
-        wasteType: dto.wasteType ?? WasteType.LITTER,
+        wasteType,
         reporterId: userId,
-        images: dto.imageUrl ? { create: [{ url: dto.imageUrl }] } : undefined,
-        statusHistory: {
-          create: [{ status: ReportStatus.PENDING, note: 'Report created' }],
-        },
+        images: { create: [{ url: dto.imageUrl }] },
+        statusHistory: { create: [{ status: ReportStatus.PENDING, note }] },
       },
       include: { images: true, statusHistory: true },
     });
 
-    
+    await this.redisService.del(key);
     await this.rabbitMQService.publish('report.created', {
       reportId: report.id,
       reporterId: report.reporterId,
@@ -66,8 +78,8 @@ export class ReportsService {
       include: { images: true, assignment: true, reporter: { select: { id: true, name: true } } },
     });
     if (!report) return { task: null };
-    return {
-      task: { ...report, onSiteMeters: ON_SITE_RADIUS_KM * 1000, minJobMinutes: MIN_JOB_MINUTES },
+        return {
+      task: { ...report, onSiteMeters: ON_SITE_RADIUS_KM * 1000 },
     };
   }
 
@@ -154,6 +166,19 @@ export class ReportsService {
     return report;
   }
 
+    async findOneFor(id: string, user: { userId: string; role: string }) {
+    const report = await this.findOne(id);
+    if (user.role === 'ADMIN' || report.reporterId === user.userId) return report;
+
+    const me = await this.prisma.user.findUnique({ where: { id: user.userId } });
+    const a = report.assignment;
+    const mine =
+      !!a && (a.cleanerId === user.userId || (!!me?.cleaningTeamId && a.cleaningTeamId === me.cleaningTeamId));
+    if (mine) return report;
+
+    throw new ForbiddenException('Not allowed');
+  }
+  
   async updateStatus(reportId: string, status: ReportStatus, note?: string) {
     const report = await this.findOne(reportId);
 
@@ -260,7 +285,7 @@ export class ReportsService {
     }
 
     if (Date.now() - a.assignedAt.getTime() < MIN_JOB_MINUTES * 60_000) {
-      throw new BadRequestException(`Cleaning takes time. Complete at least ${MIN_JOB_MINUTES} min after accepting`);
+      throw new BadRequestException('Cleaning is not finished yet. Finish the job, then submit the photo.');
     }
 
     // photo must be a fresh upload by this cleaner, usable once

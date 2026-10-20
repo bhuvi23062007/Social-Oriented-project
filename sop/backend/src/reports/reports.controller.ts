@@ -68,8 +68,8 @@ export class ReportsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reportsService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req: any) {
+    return this.reportsService.findOneFor(id, req.user);
   }
 
   @Roles('ADMIN')
@@ -102,6 +102,7 @@ export class ReportsController {
     return this.reportsService.complete(id, req.user.userId, dto);
   }
 
+  @Roles('ADMIN')
   @Get(':id/assigned')
   findAssignedToTeam(@Param('id') id: string) {
     return this.reportsService.findAssignedToTeam(id);

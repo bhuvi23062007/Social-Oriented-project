@@ -1,6 +1,7 @@
 import { motion, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useReports } from '../hooks/useReports'
+import { wasteLabel } from '../lib/waste'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -75,7 +76,7 @@ function MyReports() {
           >
             <div className="flex items-start justify-between mb-2.5">
               <div>
-                <h3 className="text-base font-bold">{r.description.split(':')[0]}</h3>
+                <h3 className="text-base font-bold">{wasteLabel(r.wasteType)}</h3>
                 <p className="text-xs text-muted mt-1">📍 {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}</p>
               </div>
               <span className={`label px-2.5 py-1 rounded-full ${statusColors[r.status]}`}>

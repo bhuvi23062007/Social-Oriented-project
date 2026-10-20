@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagePriority, MessageStatus } from '@prisma/client';
 
@@ -26,7 +26,10 @@ export class MessagesService {
     });
   }
 
-  updateStatus(id: string, status: MessageStatus) {
+  async updateStatus(id: string, status: MessageStatus, user: { userId: string; role: string }) {
+    const msg = await this.prisma.message.findUnique({ where: { id } });
+    if (!msg) throw new NotFoundException('Message not found');
+    if (user.role !== 'ADMIN' && msg.cleanerId !== user.userId) throw new ForbiddenException('Not your message');
     return this.prisma.message.update({ where: { id }, data: { status } });
   }
 }

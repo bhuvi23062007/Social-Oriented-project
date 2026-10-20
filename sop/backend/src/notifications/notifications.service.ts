@@ -12,10 +12,7 @@ export class NotificationsService {
     });
   }
 
-  markRead(id: string) {
-    return this.prisma.notification.update({
-      where: { id },
-      data: { read: true },
-    });
+    markRead(id: string, userId: string) {
+    return this.prisma.notification.updateMany({ where: { id, userId }, data: { read: true } });
   }
 }

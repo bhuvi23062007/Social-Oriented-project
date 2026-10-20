@@ -5,7 +5,6 @@ import type { Report } from './useReports'
 export interface ActiveTask extends Omit<Report, 'assignment'> {
   assignment: { assignedAt: string; cleanerId?: string | null }
   onSiteMeters: number
-  minJobMinutes: number
 }
 
 export function useActiveTask() {

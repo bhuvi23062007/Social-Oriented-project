@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useReports } from '../hooks/useReports'
 import { api } from '../lib/api'
-import { WASTE_OPTIONS, type WasteType } from '../lib/waste'
+import { compressImage } from '../lib/image'
 import PickerMap, { type LatLng } from '../components/PickerMap'
 
 type Mode = 'gps' | 'manual'
@@ -63,7 +63,6 @@ function ReportWaste() {
 
   const [image, setImage] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
-  const [wasteType, setWasteType] = useState<WasteType | ''>('')
   const [location, setLocation] = useState('')
   const [description, setDescription] = useState('')
   const [mode, setMode] = useState<Mode>('gps')
@@ -164,8 +163,8 @@ function ReportWaste() {
     e.preventDefault()
     setError('')
 
-    if (!wasteType) {
-      setError('Please select what kind of waste it is')
+    if (!file) {
+      setError('A photo of the waste is required')
       return
     }
 
@@ -192,20 +191,16 @@ function ReportWaste() {
         return
       }
 
-      let imageUrl: string | undefined
-      if (file) {
-        const formData = new FormData()
-        formData.append('file', file)
-        const up = await api.post('/storage/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
-        imageUrl = up.data.url
-      }
+      const formData = new FormData()
+      formData.append('file', await compressImage(file))
+      const up = await api.post('/storage/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
 
-      await addReport(`${location}: ${description}`, c.lat, c.lng, imageUrl, wasteType)
+      await addReport(`${location}: ${description}`, c.lat, c.lng, up.data.url)
       navigate('/my-reports')
-    } catch {
-      setError('Failed to submit report')
+    } catch (e: any) {
+      setError(e?.response?.data?.message || 'Failed to submit report')
     } finally {
       setSubmitting(false)
     }
@@ -236,21 +231,6 @@ function ReportWaste() {
           <p className="mb-5 mt-1 text-sm text-muted">Move the map to put the pin exactly on the spot.</p>
 
           <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="label mb-1.5 block text-muted">What kind of waste?</label>
-              <select
-                value={wasteType}
-                onChange={(e) => setWasteType(e.target.value as WasteType)}
-                required
-                className="w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm transition-colors focus:border-accent focus:outline-none"
-              >
-                <option value="">Select one</option>
-                {WASTE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-
             <div className="mb-4">
               <div className="mb-1.5 flex items-center justify-between">
                 <label className="label text-muted">Location</label>
@@ -322,7 +302,7 @@ function ReportWaste() {
             </div>
 
             <div className="mb-5">
-              <label className="label mb-1.5 block text-muted">Photo</label>
+              <label className="label mb-1.5 block text-muted">Photo (required)</label>
               <div className="relative flex items-center gap-3 rounded-xl border border-dashed border-line bg-paper p-3 transition-colors hover:border-accent">
                 <input
                   type="file"
@@ -353,7 +333,7 @@ function ReportWaste() {
               disabled={submitting}
               className="w-full rounded-xl bg-ink py-3 text-sm font-medium text-paper transition-colors hover:bg-accent hover:text-white disabled:opacity-60"
             >
-              {submitting ? 'Submitting…' : 'Submit Report'}
+              {submitting ? 'Analyzing photo…' : 'Submit Report'}
             </motion.button>
           </form>
         </motion.div>
