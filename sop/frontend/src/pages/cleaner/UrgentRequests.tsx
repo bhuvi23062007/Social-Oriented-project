@@ -1,17 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useReports } from '../../hooks/useReports'
-import { useCleanerLocation } from '../../hooks/useCleanerLocation'
+import { useLiveLocation, type LocStatus } from '../../hooks/useLiveLocation'
 import { wasteLabel, wastePoints } from '../../lib/waste'
 import LocationBlock from '../../components/LocationBlock'
 
+const LOC_MSG: Record<Exclude<LocStatus, 'ok'>, string> = {
+  asking: 'Getting your location...',
+  denied: 'Location is blocked. Allow it in your browser (lock icon next to the address bar). Requests appear automatically once it is on.',
+  unavailable: "Can't get your location. Turn on GPS / location services on your device.",
+}
+
 function UrgentRequests() {
-  useCleanerLocation()
   const navigate = useNavigate()
+  const { status, synced, retry } = useLiveLocation(15000)
   const { reports, loading, accept, refetch } = useReports('open', 5000)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+
+  // as soon as the server has your location, load requests right away
+  useEffect(() => {
+    if (synced) refetch()
+  }, [synced])
+
+  const ready = status === 'ok' && synced > 0
 
   const handleAccept = async (id: string) => {
     setBusyId(id)
@@ -43,13 +56,26 @@ function UrgentRequests() {
         </p>
       </div>
 
+      {!ready && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-accent-soft px-4 py-3 text-sm">
+          <span>{status === 'ok' ? 'Syncing your location...' : LOC_MSG[status]}</span>
+          {status !== 'ok' && status !== 'asking' && (
+            <button onClick={retry} className="shrink-0 rounded-md bg-ink px-3 py-1.5 text-xs font-medium text-paper">
+              Try again
+            </button>
+          )}
+        </div>
+      )}
+
       {msg && <p className="text-sm mb-4 text-glass">{msg}</p>}
 
       {reports.length === 0 ? (
-        <div className="text-sm text-muted py-16 text-center border border-line rounded-xl">
-          <p>No requests near you right now.</p>
-          <p className="text-xs mt-1">Keep this page open and allow location access so nearby requests appear here.</p>
-        </div>
+        ready && (
+          <div className="text-sm text-muted py-16 text-center border border-line rounded-xl">
+            <p>No requests near you right now.</p>
+            <p className="text-xs mt-1">Keep this page open. New requests show up here by themselves.</p>
+          </div>
+        )
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {reports.map((r, i) => {
