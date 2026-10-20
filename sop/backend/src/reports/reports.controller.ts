@@ -4,6 +4,8 @@ import { RedisService } from '../redis/redis.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { AssignTeamDto } from './dto/assign-team.dto';
+import { CompleteReportDto } from './dto/complete-report.dto';
+import { UpdateLocationDto } from './dto/update-location.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -11,61 +13,85 @@ import { Roles } from '../auth/roles.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('reports')
 export class ReportsController {
-    constructor(
-        private reportsService: ReportsService,
-        private redisService: RedisService,
-    ) { }
+  constructor(
+    private reportsService: ReportsService,
+    private redisService: RedisService,
+  ) {}
 
-    @Post()
-    create(@Request() req: any, @Body() dto: CreateReportDto) {
-        return this.reportsService.create(req.user.userId, dto);
-    }
+  @Post()
+  create(@Request() req: any, @Body() dto: CreateReportDto) {
+    return this.reportsService.create(req.user.userId, dto);
+  }
 
-    @Get('mine')
-    myReports(@Request() req: any) {
-        return this.reportsService.findMyReports(req.user.userId);
-    }
+  @Get('mine')
+  myReports(@Request() req: any) {
+    return this.reportsService.findMyReports(req.user.userId);
+  }
 
-    @Get('team/mine')
-myTeamReports(@Request() req: any) {
-  return this.reportsService.findAssignedToMyTeam(req.user.userId);
-}
+  @Get('team/mine')
+  myTeamReports(@Request() req: any) {
+    return this.reportsService.findAssignedToMyTeam(req.user.userId);
+  }
 
-    @Roles('ADMIN')
-    @Get('admin/stats')
-    async getStats() {
-        const cached = await this.redisService.getCachedStats();
-        if (cached) return cached;
-        const stats = await this.reportsService.computeStats();
-        await this.redisService.setCachedStats(stats);
-        return stats;
-    }
+  @Roles('CLEANING_STAFF')
+  @Get('open')
+  openReports(@Request() req: any) {
+    return this.reportsService.findOpen(req.user.userId);
+  }
 
-    @Roles('ADMIN')
-    @Get()
-    allReports() {
-        return this.reportsService.findAll();
-    }
+  @Roles('CLEANING_STAFF')
+  @Patch('cleaner/location')
+  updateLocation(@Request() req: any, @Body() dto: UpdateLocationDto) {
+    return this.reportsService.updateLocation(req.user.userId, dto.latitude, dto.longitude);
+  }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.reportsService.findOne(id);
-    }
+  @Roles('ADMIN')
+  @Get('admin/stats')
+  async getStats() {
+    const cached = await this.redisService.getCachedStats();
+    if (cached) return cached;
+    const stats = await this.reportsService.computeStats();
+    await this.redisService.setCachedStats(stats);
+    return stats;
+  }
 
-    @Roles('ADMIN')
-    @Patch(':id/status')
-    updateStatus(@Param('id') id: string, @Body() dto: UpdateStatusDto) {
-        return this.reportsService.updateStatus(id, dto.status, dto.note);
-    }
+  @Roles('ADMIN')
+  @Get()
+  allReports() {
+    return this.reportsService.findAll();
+  }
 
-    @Roles('ADMIN')
-    @Post(':id/assign')
-    assignTeam(@Param('id') id: string, @Body() dto: AssignTeamDto) {
-        return this.reportsService.assignTeam(id, dto.cleaningTeamId);
-    }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.reportsService.findOne(id);
+  }
 
-    @Get(':id/assigned')
-    findAssignedToTeam(@Param('id') id: string) {
-        return this.reportsService.findAssignedToTeam(id);
-    }
+  @Roles('ADMIN')
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateStatusDto) {
+    return this.reportsService.updateStatus(id, dto.status, dto.note);
+  }
+
+  @Roles('ADMIN')
+  @Post(':id/assign')
+  assignTeam(@Param('id') id: string, @Body() dto: AssignTeamDto) {
+    return this.reportsService.assignTeam(id, dto.cleaningTeamId);
+  }
+
+  @Roles('CLEANING_STAFF')
+  @Post(':id/accept')
+  accept(@Param('id') id: string, @Request() req: any) {
+    return this.reportsService.accept(id, req.user.userId);
+  }
+
+  @Roles('CLEANING_STAFF')
+  @Post(':id/complete')
+  complete(@Param('id') id: string, @Request() req: any, @Body() dto: CompleteReportDto) {
+    return this.reportsService.complete(id, req.user.userId, dto.afterImageUrl);
+  }
+
+  @Get(':id/assigned')
+  findAssignedToTeam(@Param('id') id: string) {
+    return this.reportsService.findAssignedToTeam(id);
+  }
 }

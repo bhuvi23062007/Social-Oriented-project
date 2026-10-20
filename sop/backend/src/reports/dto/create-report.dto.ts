@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { WasteType } from '@prisma/client';
 
 export class CreateReportDto {
   @IsString()
@@ -12,4 +13,12 @@ export class CreateReportDto {
   @Type(() => Number)
   @IsNumber()
   longitude: number;
-} 
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsEnum(WasteType)
+  wasteType?: WasteType;
+}

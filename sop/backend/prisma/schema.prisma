@@ -66,6 +66,9 @@ model User {
   passwordHash String
   role         Role     @default(CITIZEN)
   points       Int      @default(0)
+  latitude          Float?
+  longitude         Float?
+  locationUpdatedAt DateTime?
   createdAt    DateTime @default(now())
 
   reports            Report[]
