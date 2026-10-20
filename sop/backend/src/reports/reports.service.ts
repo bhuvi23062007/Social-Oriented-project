@@ -9,7 +9,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
 import { ReportStatus, WasteType, ImageType } from '@prisma/client';
-import { WASTE_POINTS, NEARBY_RADIUS_KM, distanceKm } from './waste.constants';
+import {
+  WASTE_POINTS,
+  NEARBY_RADIUS_KM,
+  ON_SITE_RADIUS_KM,
+  MIN_JOB_MINUTES,
+  CLEANER_ONLINE_MINUTES,
+  distanceKm,
+} from './waste.constants';
 
 const REPORTER_SELECT = { id: true, name: true, email: true };
 
@@ -40,6 +47,7 @@ export class ReportsService {
       include: { images: true, statusHistory: true },
     });
 
+    
     await this.rabbitMQService.publish('report.created', {
       reportId: report.id,
       reporterId: report.reporterId,
@@ -48,6 +56,43 @@ export class ReportsService {
     return report;
   }
 
+    // the cleaner's current self-accepted job (used to resume after closing the app)
+  async findActive(userId: string) {
+    const report = await this.prisma.report.findFirst({
+      where: {
+        status: { in: [ReportStatus.ACCEPTED, ReportStatus.IN_PROGRESS] },
+        assignment: { cleanerId: userId },
+      },
+      include: { images: true, assignment: true, reporter: { select: { id: true, name: true } } },
+    });
+    if (!report) return { task: null };
+    return {
+      task: { ...report, onSiteMeters: ON_SITE_RADIUS_KM * 1000, minJobMinutes: MIN_JOB_MINUTES },
+    };
+  }
+
+  // cleaner cancels their accepted job, it goes back to the open pool
+  async release(reportId: string, cleanerId: string) {
+    await this.prisma.$transaction(async (tx) => {
+      const res = await tx.report.updateMany({
+        where: {
+          id: reportId,
+          status: { in: [ReportStatus.ACCEPTED, ReportStatus.IN_PROGRESS] },
+          assignment: { cleanerId },
+        },
+        data: { status: ReportStatus.PENDING },
+      });
+      if (res.count === 0) throw new BadRequestException('Nothing to cancel');
+
+      await tx.assignment.delete({ where: { reportId } });
+      await tx.reportStatusHistory.create({
+        data: { reportId, status: ReportStatus.PENDING, note: 'Released by cleaner, open again' },
+      });
+    });
+    await this.redisService.invalidateStats();
+    return { ok: true };
+  }
+  
   findMyReports(userId: string) {
     return this.prisma.report.findMany({
       where: { reporterId: userId },
@@ -153,7 +198,8 @@ export class ReportsService {
     const cleaner = await this.prisma.user.findUnique({ where: { id: cleanerId } });
     const existing = await this.findOne(reportId);
 
-    if (!cleaner || cleaner.latitude == null || cleaner.longitude == null) {
+    const ageMs = cleaner?.locationUpdatedAt ? Date.now() - cleaner.locationUpdatedAt.getTime() : Infinity;
+    if (!cleaner || cleaner.latitude == null || cleaner.longitude == null || ageMs > CLEANER_ONLINE_MINUTES * 60_000) {
       throw new BadRequestException('Turn on location access to accept requests');
     }
     const km = distanceKm(cleaner.latitude, cleaner.longitude, existing.latitude, existing.longitude);
@@ -162,6 +208,14 @@ export class ReportsService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      // lock this cleaner's row so two quick taps can't both pass the one-job check
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${cleanerId} FOR UPDATE`;
+
+      const active = await tx.assignment.count({
+        where: { cleanerId, report: { status: { in: [ReportStatus.ACCEPTED, ReportStatus.IN_PROGRESS] } } },
+      });
+      if (active > 0) throw new ForbiddenException('Finish your current task before accepting another');
+
       const claimed = await tx.report.updateMany({
         where: { id: reportId, status: ReportStatus.PENDING },
         data: { status: ReportStatus.ACCEPTED },
@@ -172,11 +226,7 @@ export class ReportsService {
         data: { reportId, cleanerId, cleaningTeamId: cleaner.cleaningTeamId ?? null },
       });
       await tx.reportStatusHistory.create({
-        data: {
-          reportId,
-          status: ReportStatus.ACCEPTED,
-          note: `Accepted by ${cleaner.name ?? 'cleaner'}`,
-        },
+        data: { reportId, status: ReportStatus.ACCEPTED, note: `Accepted by ${cleaner.name ?? 'cleaner'}` },
       });
     });
 
@@ -188,33 +238,58 @@ export class ReportsService {
     return report;
   }
 
-  async complete(reportId: string, userId: string, afterImageUrl: string) {
+  async complete(
+    reportId: string,
+    userId: string,
+    dto: { afterImageUrl: string; latitude: number; longitude: number },
+  ) {
     const report = await this.findOne(reportId);
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const a = report.assignment;
 
-    const isMine =
-      !!a &&
-      (a.cleanerId === userId || (!!user?.cleaningTeamId && a.cleaningTeamId === user.cleaningTeamId));
-    if (!isMine) throw new ForbiddenException('This task is not assigned to you');
+    const isMine = !!a && (a.cleanerId === userId || (!!user?.cleaningTeamId && a.cleaningTeamId === user.cleaningTeamId));
+    if (!a || !isMine) throw new ForbiddenException('This task is not assigned to you');
 
     if (report.status !== ReportStatus.ACCEPTED && report.status !== ReportStatus.IN_PROGRESS) {
       throw new BadRequestException('Report is not in a completable state');
     }
 
-    await this.prisma.reportImage.create({
-      data: { reportId, url: afterImageUrl, type: ImageType.AFTER },
-    });
-    await this.prisma.assignment.update({
-      where: { reportId },
-      data: { completedAt: new Date() },
+    const km = distanceKm(dto.latitude, dto.longitude, report.latitude, report.longitude);
+    if (km > ON_SITE_RADIUS_KM) {
+      throw new ForbiddenException(`You must be at the spot to complete (you are ${Math.round(km * 1000)} m away)`);
+    }
+
+    if (Date.now() - a.assignedAt.getTime() < MIN_JOB_MINUTES * 60_000) {
+      throw new BadRequestException(`Cleaning takes time. Complete at least ${MIN_JOB_MINUTES} min after accepting`);
+    }
+
+    // photo must be a fresh upload by this cleaner, usable once
+    const key = `upload:${dto.afterImageUrl}`;
+    if ((await this.redisService.get(key)) !== userId) {
+      throw new BadRequestException('Take and upload a fresh photo of the cleaned spot');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      const claimed = await tx.report.updateMany({
+        where: { id: reportId, status: { in: [ReportStatus.ACCEPTED, ReportStatus.IN_PROGRESS] } },
+        data: { status: ReportStatus.CLEANING_COMPLETED },
+      });
+      if (claimed.count === 0) throw new ConflictException('Report already completed');
+
+      await tx.reportImage.create({ data: { reportId, url: dto.afterImageUrl, type: ImageType.AFTER } });
+      await tx.assignment.update({ where: { reportId }, data: { completedAt: new Date() } });
+      await tx.reportStatusHistory.create({
+        data: {
+          reportId,
+          status: ReportStatus.CLEANING_COMPLETED,
+          note: 'Cleaning completed, awaiting admin verification',
+        },
+      });
     });
 
-    return this.updateStatus(
-      reportId,
-      ReportStatus.CLEANING_COMPLETED,
-      'Cleaning completed, awaiting admin verification',
-    );
+    await this.redisService.del(key);
+    await this.redisService.invalidateStats();
+    return this.findOne(reportId);
   }
 
   async findAssignedToMyTeam(userId: string) {

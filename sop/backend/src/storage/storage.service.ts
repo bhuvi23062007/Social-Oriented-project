@@ -1,11 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as Minio from 'minio';
 import { randomUUID } from 'crypto';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
   private client: Minio.Client;
   private readonly bucket = process.env.MINIO_BUCKET || 'waste-images';
+
+  constructor(private redis: RedisService) {}
 
   async onModuleInit() {
     this.client = new Minio.Client({
@@ -34,7 +37,7 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  async upload(file: any, folder: string) {
+  async upload(file: any, folder: string, userId: string) {
     const extension = file.originalname.split('.').pop();
     const filename = `${folder}/${randomUUID()}.${extension}`;
 
@@ -42,6 +45,9 @@ export class StorageService implements OnModuleInit {
       'Content-Type': file.mimetype,
     });
 
-    return `http://localhost:9000/${this.bucket}/${filename}`;
+    const url = `http://localhost:9000/${this.bucket}/${filename}`;
+    // remember the uploader so completion can only use their own fresh photo
+    await this.redis.set(`upload:${url}`, userId, 'EX', 7200);
+    return url;
   }
 }

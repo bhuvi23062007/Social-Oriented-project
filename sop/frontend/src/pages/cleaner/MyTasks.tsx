@@ -5,7 +5,19 @@ import { api } from '../../lib/api'
 import { wasteLabel } from '../../lib/waste'
 import LocationBlock from '../../components/LocationBlock'
 
-function TaskCard({ r, onComplete }: { r: Report; onComplete: (id: string, file: File) => Promise<void> }) {
+type Complete = (id: string, file: File, lat: number, lng: number) => Promise<void>
+
+const getPos = () =>
+  new Promise<GeolocationPosition>((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error('unsupported'))
+    navigator.geolocation.getCurrentPosition(resolve, () => reject(new Error('denied')), {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0,
+    })
+  })
+
+function TaskCard({ r, onComplete }: { r: Report; onComplete: Complete }) {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -25,9 +37,16 @@ function TaskCard({ r, onComplete }: { r: Report; onComplete: (id: string, file:
     setBusy(true)
     setError('')
     try {
-      await onComplete(r.id, file)
-    } catch {
-      setError('Could not complete. Try again.')
+      let pos: GeolocationPosition
+      try {
+        pos = await getPos()
+      } catch {
+        setError('Allow location access. You must be at the spot to complete.')
+        return
+      }
+      await onComplete(r.id, file, pos.coords.latitude, pos.coords.longitude)
+    } catch (e: any) {
+      setError(e?.response?.data?.message || 'Could not complete. Try again.')
     } finally {
       setBusy(false)
     }
@@ -43,11 +62,12 @@ function TaskCard({ r, onComplete }: { r: Report; onComplete: (id: string, file:
         <LocationBlock lat={r.latitude} lng={r.longitude} showMe />
 
         <div className="mt-4">
-          <label className="label text-muted block mb-1.5">After-cleaning photo</label>
-          <input type="file" accept="image/*" onChange={pick} className="text-xs w-full" />
+          <label className="label text-muted block mb-1.5">After-cleaning photo (take it at the spot)</label>
+          <input type="file" accept="image/*" capture="environment" onChange={pick} className="text-xs w-full" />
           {preview && <img src={preview} alt="After preview" className="mt-2 w-full h-32 object-cover rounded-md border border-line" />}
         </div>
 
+        <p className="text-xs text-muted mt-3">You must be within 150 m of the spot, and at least 2 min after accepting.</p>
         {error && <p className="text-xs text-glass mt-2">{error}</p>}
 
         <button
@@ -55,7 +75,7 @@ function TaskCard({ r, onComplete }: { r: Report; onComplete: (id: string, file:
           disabled={!file || busy}
           className="w-full mt-4 bg-ink text-paper py-2 rounded-md text-xs font-medium hover:bg-accent hover:text-white transition-colors disabled:opacity-40"
         >
-          {busy ? 'Uploading...' : 'Mark Completed'}
+          {busy ? 'Checking...' : 'Mark Completed'}
         </button>
       </div>
     </motion.div>
@@ -70,11 +90,11 @@ function MyTasks() {
   const awaitingVerification = reports.filter((r) => r.status === 'CLEANING_COMPLETED')
   const completed = reports.filter((r) => r.status === 'RESOLVED')
 
-  const handleComplete = async (id: string, file: File) => {
+  const handleComplete: Complete = async (id, file, lat, lng) => {
     const fd = new FormData()
     fd.append('file', file)
     const up = await api.post('/storage/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-    await complete(id, up.data.url)
+    await complete(id, up.data.url, lat, lng)
   }
 
   if (loading) return <p className="text-muted text-sm">Loading...</p>
@@ -84,7 +104,7 @@ function MyTasks() {
       <div className="mb-8">
         <span className="label text-accent">Tasks</span>
         <h1 className="text-3xl font-black tracking-tighter mt-1">My Tasks</h1>
-        <p className="text-muted text-sm mt-1">Jobs you accepted or that were assigned to your team</p>
+        <p className="text-muted text-sm mt-1">Finish your current job to take a new one</p>
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">

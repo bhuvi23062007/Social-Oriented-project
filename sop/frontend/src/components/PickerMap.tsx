@@ -68,11 +68,14 @@ function PickerMap({ initial, target, onPick, insetLeft = 0, insetBottom = 0, la
       updateWhenIdle: false,
       updateWhenZooming: false,
     }).addTo(map)
-    const tc = tiles.getContainer()
-    if (tc) tc.style.filter = 'invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.6)'
 
     mapRef.current = map
     place(map, initial, initial.zoom, false)
+
+    // tile container only exists once the map has a view, so apply the dark filter now
+    const tc = tiles.getContainer()
+    if (tc) tc.style.filter = 'invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.6)'
+
     const pt = pinPoint()
     setPin({ x: pt.x, y: pt.y })
 

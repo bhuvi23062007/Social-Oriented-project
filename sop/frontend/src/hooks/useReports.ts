@@ -77,8 +77,8 @@ export function useReports(scope: Scope = 'mine', pollMs?: number) {
     await fetchReports(true)
   }, [fetchReports])
 
-  const complete = useCallback(async (id: string, afterImageUrl: string) => {
-    await api.post(`/reports/${id}/complete`, { afterImageUrl })
+  const complete = useCallback(async (id: string, afterImageUrl: string, latitude: number, longitude: number) => {
+    await api.post(`/reports/${id}/complete`, { afterImageUrl, latitude, longitude })
     await fetchReports(true)
   }, [fetchReports])
 

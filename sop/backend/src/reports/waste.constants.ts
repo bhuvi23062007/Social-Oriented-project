@@ -18,6 +18,8 @@ export const WASTE_LABELS: Record<WasteType, string> = {
 
 export const NEARBY_RADIUS_KM = 5;
 export const CLEANER_ONLINE_MINUTES = 15;
+export const ON_SITE_RADIUS_KM = 0.15; // raise for demos if you're not at the spot
+export const MIN_JOB_MINUTES = 2;
 
 export function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;

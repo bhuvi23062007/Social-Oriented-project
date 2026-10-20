@@ -40,6 +40,12 @@ export class ReportsController {
   }
 
   @Roles('CLEANING_STAFF')
+  @Get('active')
+  activeReport(@Request() req: any) {
+    return this.reportsService.findActive(req.user.userId);
+  }
+
+  @Roles('CLEANING_STAFF')
   @Patch('cleaner/location')
   updateLocation(@Request() req: any, @Body() dto: UpdateLocationDto) {
     return this.reportsService.updateLocation(req.user.userId, dto.latitude, dto.longitude);
@@ -85,9 +91,15 @@ export class ReportsController {
   }
 
   @Roles('CLEANING_STAFF')
+  @Post(':id/release')
+  release(@Param('id') id: string, @Request() req: any) {
+    return this.reportsService.release(id, req.user.userId);
+  }
+
+  @Roles('CLEANING_STAFF')
   @Post(':id/complete')
   complete(@Param('id') id: string, @Request() req: any, @Body() dto: CompleteReportDto) {
-    return this.reportsService.complete(id, req.user.userId, dto.afterImageUrl);
+    return this.reportsService.complete(id, req.user.userId, dto);
   }
 
   @Get(':id/assigned')

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import Sidebar from './Sidebar'
 import ProtectedRoute from './ProtectedRoute'
+import NoActiveTaskGate from './components/NoActiveTaskGate'
 
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -18,6 +19,7 @@ import Learning from './pages/Learning'
 import CleanerHome from './pages/cleaner/CleanerHome'
 import MyTasks from './pages/cleaner/MyTasks'
 import UrgentRequests from './pages/cleaner/UrgentRequests'
+import ActiveTask from './pages/cleaner/ActiveTask'
 import CleanerMessages from './pages/cleaner/CleanerMessages'
 import CleanerCredits from './pages/cleaner/CleanerCredits'
 
@@ -56,10 +58,11 @@ function App() {
         <Route path="/notifications" element={<ProtectedRoute allow={['CITIZEN']}>{withSidebar(<UserNotifications />)}</ProtectedRoute>} />
         <Route path="/rewards" element={<ProtectedRoute allow={['CITIZEN']}>{withSidebar(<Rewards />)}</ProtectedRoute>} />
 
-        {/* Cleaner */}
-        <Route path="/cleaner" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<CleanerHome />)}</ProtectedRoute>} />
+        {/* Cleaner: home and requests bounce to the active task while one is open */}
+        <Route path="/cleaner" element={<ProtectedRoute allow={['CLEANING_STAFF']}><NoActiveTaskGate>{withSidebar(<CleanerHome />)}</NoActiveTaskGate></ProtectedRoute>} />
+        <Route path="/cleaner/urgent" element={<ProtectedRoute allow={['CLEANING_STAFF']}><NoActiveTaskGate>{withSidebar(<UrgentRequests />)}</NoActiveTaskGate></ProtectedRoute>} />
+        <Route path="/cleaner/active" element={<ProtectedRoute allow={['CLEANING_STAFF']}><ActiveTask /></ProtectedRoute>} />
         <Route path="/cleaner/tasks" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<MyTasks />)}</ProtectedRoute>} />
-        <Route path="/cleaner/urgent" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<UrgentRequests />)}</ProtectedRoute>} />
         <Route path="/cleaner/messages" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<CleanerMessages />)}</ProtectedRoute>} />
         <Route path="/cleaner/credits" element={<ProtectedRoute allow={['CLEANING_STAFF']}>{withSidebar(<CleanerCredits />)}</ProtectedRoute>} />
 
