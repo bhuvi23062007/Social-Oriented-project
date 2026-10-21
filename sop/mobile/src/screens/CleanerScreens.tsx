@@ -318,6 +318,7 @@ export function CleanerMessagesScreen() {
 const cc = StyleSheet.create({
   statsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, empty: { color: C.muted, textAlign: 'center', paddingVertical: 24, fontSize: 13 },
   cardTitle: { color: C.ink, fontSize: 15, fontWeight: '900', marginTop: 5 }, mono: { color: C.muted, fontSize: 11 },
+  points: { color: C.accent, fontSize: 14, fontWeight: '900' },
   beforeImage: { width: '100%', height: 150, borderRadius: 10, marginTop: 12, backgroundColor: C.accentSoft },
   afterImage: { width: '100%', height: 190, borderRadius: 10, marginVertical: 12, backgroundColor: C.accentSoft },
   requestImage: { width: '100%', height: 165, backgroundColor: C.accentSoft },

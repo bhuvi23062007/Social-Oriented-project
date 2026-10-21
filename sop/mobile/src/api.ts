@@ -15,6 +15,19 @@ api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
   return config;
 });
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(fn: (() => void) | null) {
+  onUnauthorized = fn;
+}
+
+api.interceptors.response.use(
+  (r) => r,
+  (err) => {
+    const isAuthCall = String(err?.config?.url ?? '').startsWith('/auth/');
+    if (err?.response?.status === 401 && accessToken && !isAuthCall) onUnauthorized?.();
+    return Promise.reject(err);
+  },
+);
 
 export function getApiError(error: unknown, fallback = 'Something went wrong. Please try again.') {
   const e = error as any;

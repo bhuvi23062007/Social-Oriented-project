@@ -39,7 +39,8 @@
         {
           "locationWhenInUsePermission": "CleanCity uses your location to place reports and help cleaners reach assigned requests."
         }
-      ]
+      ],
+      "expo-build-properties"
     ]
   }
 }

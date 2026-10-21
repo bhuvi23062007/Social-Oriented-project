@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
-import { api, getApiError, setApiToken } from './api';
+import { api, getApiError, setApiToken, setUnauthorizedHandler } from './api';
 import type { AuthState, Role } from './types';
 
 type JwtPayload = { sub: string; email: string; role: Role; name?: string };
@@ -18,6 +18,15 @@ const STORE_KEY = 'cleancity.auth';
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState | null>(null);
   const [ready, setReady] = useState(false);
+
+    useEffect(() => {
+    setUnauthorizedHandler(() => {
+      SecureStore.deleteItemAsync(STORE_KEY).catch(() => undefined);
+      setApiToken(null);
+      setAuth(null);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   useEffect(() => {
     let mounted = true;

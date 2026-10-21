@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 25, fontWeight: '900', color: C.ink },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 },
   sectionTitle: { color: C.ink, fontSize: 16, fontWeight: '800' },
+  link: { color: C.accent, fontSize: 13, fontWeight: '800' },
   pill: { paddingHorizontal: 9, paddingVertical: 5, borderRadius: 100, alignSelf: 'flex-start' },
   pillText: { fontSize: 10, fontWeight: '800' },
   mono: { color: C.muted, fontSize: 11, fontVariant: ['tabular-nums'] },
