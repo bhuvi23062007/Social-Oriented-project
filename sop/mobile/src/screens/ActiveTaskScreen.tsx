@@ -15,7 +15,7 @@ import {
   ViewStyle,
   useWindowDimensions,
 } from 'react-native';
-import MapView, { Circle, Marker, Polyline } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -53,6 +53,7 @@ interface RouteInfo {
   duration: number;
   steps: Step[];
 }
+
 
 const WASTE: Record<string, { label: string; points: number }> = {
   LITTER: { label: 'Litter on street / roadside', points: 10 },
@@ -227,7 +228,7 @@ export default function ActiveTaskScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const mapRef = useRef<MapView>(null);
+  const webViewRef = useRef<WebView>(null);
 
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
@@ -327,15 +328,10 @@ export default function ActiveTaskScreen() {
   // camera follows the cleaner
   useEffect(() => {
     if (!follow || !pos) return;
-    const moving = (pos.speed ?? 0) > 1.5 && pos.heading != null;
-    mapRef.current?.animateCamera(
-      {
-        center: { latitude: pos.latitude, longitude: pos.longitude },
-        zoom: 17,
-        ...(moving ? { heading: pos.heading as number } : {}),
-      },
-      { duration: 700 },
-    );
+    webViewRef.current?.injectJavaScript(`
+      map.setView([${pos.latitude}, ${pos.longitude}], 17, { animate: true });
+      true;
+    `);
   }, [pos?.latitude, pos?.longitude, follow]);
 
   const dest: Pt | null = task ? { latitude: task.latitude, longitude: task.longitude } : null;
@@ -466,37 +462,54 @@ export default function ActiveTaskScreen() {
 
   return (
     <View style={s.root}>
-      <MapView
-        ref={mapRef}
-        style={StyleSheet.absoluteFill}
-        customMapStyle={DARK_STYLE as any}
-        userInterfaceStyle="dark"
-        showsCompass={false}
-        toolbarEnabled={false}
-        onPanDrag={() => setFollow(false)}
-        initialRegion={{ ...dest, latitudeDelta: 0.01, longitudeDelta: 0.01 }}
-      >
-        {route && route.coords.length > 1 && (
-          <>
-            <Polyline coordinates={route.coords} strokeColor="#0b1220" strokeWidth={10} />
-            <Polyline coordinates={route.coords} strokeColor="#4C8DFF" strokeWidth={6} />
-          </>
-        )}
-        <Marker coordinate={dest} pinColor="red" />
-        {pos && (
-          <>
-            <Circle
-              center={pos}
-              radius={Math.min(acc, 200)}
-              strokeColor="rgba(59,130,246,0.5)"
-              fillColor="rgba(59,130,246,0.12)"
-            />
-            <Marker coordinate={pos} anchor={{ x: 0.5, y: 0.5 }} flat rotation={pos.heading ?? 0}>
-              <View style={s.meDot} />
-            </Marker>
-          </>
-        )}
-      </MapView>
+      <View style={StyleSheet.absoluteFill}>
+        <WebView
+          source={{
+            html: `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+                  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                  <style>
+                    body, html { margin: 0; padding: 0; height: 100%; background: #0b0d10; }
+                    #map { width: 100%; height: 100%; }
+                    .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.6); }
+                  </style>
+                </head>
+                <body>
+                  <div id="map"></div>
+                  <script>
+                    var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([${dest.latitude}, ${dest.longitude}], 16);
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+                    var destIcon = L.divIcon({
+                      className: '',
+                      html: '<div style="width:28px;height:28px;background:#EF4444;border:3px solid #fff;border-radius:50%;box-shadow:0 3px 8px rgba(0,0,0,0.5)"></div>',
+                      iconSize: [28, 28],
+                      iconAnchor: [14, 14]
+                    });
+                    L.marker([${dest.latitude}, ${dest.longitude}], { icon: destIcon }).addTo(map);
+
+                    ${pos ? `
+                      var meIcon = L.divIcon({
+                        className: '',
+                        html: '<div style="width:24px;height:24px;background:#3B82F6;border:3px solid #fff;border-radius:50%;box-shadow:0 3px 8px rgba(0,0,0,0.5)"></div>',
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                      });
+                      L.marker([${pos.latitude},${pos.longitude}], { icon: meIcon }).addTo(map);
+                    ` : ''}
+                  </script>
+                </body>
+              </html>
+            `,
+          }}
+          style={{ flex: 1, backgroundColor: '#0b0d10' }}
+          scrollEnabled={false}
+        />
+      </View>
 
       {/* top: turn-by-turn */}
       <View style={[s.topWrap, { top: insets.top + 8 }]} pointerEvents="box-none">
@@ -562,14 +575,15 @@ export default function ActiveTaskScreen() {
         <ScaleButton onPress={() => setFollow(true)} style={s.ctrl}>
           <Text style={[s.ctrlText, follow && { color: '#60a5fa' }]}>◎</Text>
         </ScaleButton>
-        <ScaleButton
+       <ScaleButton
           onPress={() => {
             setFollow(false);
-            if (pos) {
-              mapRef.current?.fitToCoordinates([pos, dest], {
-                edgePadding: { top: 180, right: 50, bottom: 380, left: 50 },
-                animated: true,
-              });
+            if (pos && dest) {
+              webViewRef.current?.injectJavaScript(`
+                var bounds = L.latLngBounds([[${dest.latitude}, ${dest.longitude}], [${pos.latitude}, ${pos.longitude}]]);
+                map.fitBounds(bounds, { padding: [60, 60] });
+                true;
+              `);
             }
           }}
           style={s.ctrl}
