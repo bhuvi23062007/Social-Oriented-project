@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "CleanCity",
+    "slug": "cleancity-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#FAFAFA"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cleancity.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "CleanCity uses your camera to photograph waste reports and completed cleaning tasks.",
+        "NSPhotoLibraryUsageDescription": "CleanCity lets you choose a waste photo for a report."
+      }
+    },
+    "android": {
+      "package": "com.cleancity.mobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      "react-native-maps",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "CleanCity needs access to photos for waste reports.",
+          "cameraPermission": "CleanCity uses the camera to photograph waste and cleaned locations.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "CleanCity uses your location to place reports and help cleaners reach assigned requests."
+        }
+      ]
+    ]
+  }
+}

@@ -58,7 +58,7 @@ export class WasteClassifierService {
             body: JSON.stringify({
               model,
               temperature: 0,
-              max_tokens: 500,
+              max_tokens: 2000,
               messages: [{ role: 'user', content }],
             }),
             signal: AbortSignal.timeout(timeoutMs),
