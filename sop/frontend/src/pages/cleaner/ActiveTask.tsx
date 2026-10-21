@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { api } from '../../lib/api'
+import { compressImage } from '../../lib/image'
 import { useActiveTask } from '../../hooks/useActiveTask'
 import { useLiveLocation } from '../../hooks/useLiveLocation'
 import { fetchRoute, distanceM, fmtDist, fmtMin, type RouteInfo } from '../../lib/route'
@@ -26,6 +27,9 @@ function ActiveTask() {
   const [preview, setPreview] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [canForce, setCanForce] = useState(false)
   const last = useRef<{ lat: number; lng: number; t: number } | null>(null)
   const arrived = useRef(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -105,33 +109,57 @@ function ActiveTask() {
   let cta = { label: '', cls: '', disabled: true }
   if (!pos) cta = { label: 'Waiting for GPS...', cls: 'bg-white/10 text-white/60', disabled: true }
   else if (!onSite) cta = { label: `${fmtDist(distM ?? 0)} to the spot`, cls: 'bg-white/10 text-white/70', disabled: true }
+  else if (uploading) cta = { label: 'Uploading photo...', cls: 'bg-white/10 text-white/60', disabled: true }
   else if (!file) cta = { label: 'Take after photo', cls: 'bg-emerald-500 text-white', disabled: false }
-  else cta = { label: busy ? 'Submitting...' : 'Complete task', cls: 'bg-emerald-500 text-white', disabled: busy }
+  else cta = { label: busy ? 'Submitting...' : 'Complete task', cls: 'bg-emerald-500 text-white', disabled: busy || !uploadedUrl }
 
-  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
-    if (f) {
-      setFile(f)
-      setPreview(URL.createObjectURL(f))
+    e.target.value = ''
+    if (!f) return
+    setFile(f)
+    setPreview(URL.createObjectURL(f))
+    setUploadedUrl(null)
+    setCanForce(false)
+    setError('')
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', await compressImage(f))
+      const up = await api.post('/storage/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      setUploadedUrl(up.data.url)
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Upload failed. Retake the photo.')
+      setFile(null)
+      setPreview(null)
+    } finally {
+      setUploading(false)
     }
   }
 
-  const complete = async () => {
-    if (!file || !pos) return
+    const complete = async (force = false) => {
+    if (!uploadedUrl || !pos) return
     setBusy(true)
     setError('')
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const up = await api.post('/storage/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
       await api.post(`/reports/${task.id}/complete`, {
-        afterImageUrl: up.data.url,
+        afterImageUrl: uploadedUrl,
         latitude: pos.lat,
         longitude: pos.lng,
+        force,
       })
       navigate('/cleaner/urgent', { replace: true })
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Could not complete. Try again.')
+      const d = e?.response?.data
+      setError(d?.message || 'Could not complete. Try again.')
+      if (d?.code === 'NOT_CLEANED') {
+        setCanForce(true)
+      } else if (/too old|fresh photo/i.test(d?.message || '')) {
+        setFile(null)
+        setPreview(null)
+        setUploadedUrl(null)
+        setCanForce(false)
+      }
     } finally {
       setBusy(false)
     }
@@ -294,8 +322,22 @@ function ActiveTask() {
                   </button>
                 </div>
               )}
-              {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
+              {error && <p className="mt-2 text-xs text-red-300">{error}</p>}{canForce && (
+                <button
+                  onClick={() => complete(true)}
+                  disabled={busy}
+                  className="mt-2 w-full rounded-2xl border border-amber-400/40 py-3 text-sm font-medium text-amber-300 disabled:opacity-50"
+                >
+                  Submit anyway (admin will review)
+                </button>
+              )}
 
+              <button
+                onClick={release}
+                className="mt-3 w-full rounded-2xl border border-red-400/30 py-3 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/10"
+              >
+                Cancel task
+              </button>
               <AnimatePresence initial={false}>
                 {expanded && (
                   <motion.div
@@ -326,13 +368,6 @@ function ActiveTask() {
                         ))}
                       </ol>
                     )}
-
-                    <button
-                      onClick={release}
-                      className="mt-4 w-full rounded-xl border border-red-400/30 py-2.5 text-xs font-medium text-red-300"
-                    >
-                      Cancel this task
-                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>

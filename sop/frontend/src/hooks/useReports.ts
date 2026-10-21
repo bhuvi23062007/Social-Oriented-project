@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../lib/api'
 import type { WasteType } from '../lib/waste'
+import { useLiveEvents } from './useLiveEvents'
 
 export type ReportStatus = 'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'CLEANING_COMPLETED' | 'RESOLVED' | 'REJECTED'
 export type Scope = 'mine' | 'all' | 'team' | 'open'
@@ -47,8 +48,10 @@ export function useReports(scope: Scope = 'mine', pollMs?: number) {
     }
   }, [scope])
 
+  useLiveEvents(() => fetchReports(true))
   useEffect(() => {
     fetchReports()
+
     if (!pollMs) return
     const t = setInterval(() => fetchReports(true), pollMs)
     return () => clearInterval(t)

@@ -8,6 +8,7 @@ import {
   CLEANER_ONLINE_MINUTES,
   distanceKm,
 } from '../reports/waste.constants';
+import { EventsService } from '../events/events.service';
 
 interface ReportCreatedEvent {
   reportId: string;
@@ -28,7 +29,10 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
   private logger = new Logger(RabbitMQService.name);
   private readonly exchange = 'waste_exchange';
 
-  constructor(private prisma: PrismaService) {}
+    constructor(
+    private prisma: PrismaService,
+    private events: EventsService,
+  ) {}
 
   async onModuleInit() {
     this.connection = await amqp.connect(process.env.RABBITMQ_URL ?? 'amqp://admin:pass123@localhost:5672');
@@ -118,6 +122,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
       })),
     });
 
+    nearby.forEach((c) => this.events.emit(c.id, 'new-request', { reportId: report.id }));
     this.logger.log(`[Nearby Worker] Notified ${nearby.length} cleaner(s) for report ${report.id}`);
   }
 

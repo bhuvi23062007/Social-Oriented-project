@@ -36,6 +36,7 @@ function VerifyReports() {
             const before = r.images.find((i) => i.type !== 'AFTER')
             const after = r.images.find((i) => i.type === 'AFTER')
             const cleaner = r.assignment?.cleaner?.name || r.assignment?.cleaningTeam?.name
+            const aiNote = [...r.statusHistory].reverse().find((h) => h.status === 'CLEANING_COMPLETED')?.note
             return (
               <div key={r.id} className="bg-surface border border-line rounded-xl p-5">
                 <div className="flex items-start justify-between flex-wrap gap-2 mb-4">
@@ -46,6 +47,7 @@ function VerifyReports() {
                     <p className="text-xs text-muted mt-0.5">
                       Reporter: {r.reporter?.name || r.reporter?.email || '-'} · Cleaner: {cleaner || '-'}
                     </p>
+                    {aiNote && <p className="mt-1 text-xs text-accent">{aiNote}</p>}
                     <LocationBlock lat={r.latitude} lng={r.longitude} />
                   </div>
                   <div className="flex gap-2">

@@ -11,6 +11,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { RewardsModule } from './rewards/rewards.module';
 import { CleaningTeamsModule } from './cleaning-teams/cleaning-teams.module';
 import { MessagesModule } from './messages/messages.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MessagesModule } from './messages/messages.module';
     RewardsModule,
     CleaningTeamsModule,
     MessagesModule,
+    EventsModule,
   ],
   controllers: [AppController],
 })
