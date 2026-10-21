@@ -50,7 +50,7 @@ function Home() {
         <div className="h-16 px-[6%] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-7 h-7 rounded-md bg-accent text-white flex items-center justify-center text-xs font-bold">CC</span>
-            <span className="font-black text-lg tracking-tight">CleanCity</span>
+            <span className="font-black text-lg tracking-tight">CleanMaxx</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
             <a href="#how" className="hover:text-ink transition-colors">How it works</a>
@@ -256,13 +256,13 @@ function Home() {
             Small reports create a big impact.
           </h2>
           <p className="text-muted text-base leading-relaxed mb-8">
-            CleanCity connects citizens with their community to build cleaner
+            CleanMaxx connects citizens with their community to build cleaner
             streets, responsible waste management, and a healthier environment —
             one report at a time.
           </p>
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="inline-block">
             <Link to="/register" className="inline-flex items-center gap-2 bg-ink text-paper px-6 py-3.5 rounded-md text-sm font-medium hover:bg-accent hover:text-white transition-colors">
-              Join CleanCity <span>→</span>
+              Join CleanMaxx <span>→</span>
             </Link>
           </motion.div>
         </motion.div>
@@ -272,9 +272,9 @@ function Home() {
       <footer className="px-[6%] py-8 border-t border-line flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">
           <span className="w-6 h-6 rounded-md bg-accent text-white flex items-center justify-center text-[10px] font-bold">CC</span>
-          <span className="font-black text-sm">CleanCity</span>
+          <span className="font-black text-sm">CleanMaxx</span>
         </div>
-        <p className="text-muted text-xs">© 2026 CleanCity. Community Portal.</p>
+        <p className="text-muted text-xs">© 2026 CleanMaxx. Community Portal.</p>
       </footer>
     </div>
   )

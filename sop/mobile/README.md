@@ -1,6 +1,6 @@
-# CleanCity Mobile (React Native)
+# CleanMaxx Mobile (React Native)
 
-This is the React Native companion to the existing CleanCity React website. It uses the same NestJS REST API and database; it does not create a separate backend or mobile database.
+This is the React Native companion to the existing CleanMaxx React website. It uses the same NestJS REST API and database; it does not create a separate backend or mobile database.
 
 ## Implemented mobile screens
 
@@ -79,7 +79,7 @@ The map works in a compatible Expo Go build during development. A standalone And
 ]
 ```
 
-Restrict that key to this app's Android package (`com.cleancity.mobile`) and the appropriate signing certificate. Rebuild the APK after adding the key. See the [react-native-maps installation guidance](https://github.com/react-native-maps/react-native-maps/blob/master/docs/installation.md).
+Restrict that key to this app's Android package (`com.cleanmaxx.mobile`) and the appropriate signing certificate. Rebuild the APK after adding the key. See the [react-native-maps installation guidance](https://github.com/react-native-maps/react-native-maps/blob/master/docs/installation.md).
 
 ## 5. Start the existing backend
 

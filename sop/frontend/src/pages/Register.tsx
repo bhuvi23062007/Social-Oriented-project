@@ -60,11 +60,11 @@ function Register() {
           <div className="flex-1 p-10 md:p-12 bg-accent text-white flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-8">
               <span className="w-8 h-8 rounded-md bg-white/15 flex items-center justify-center text-sm font-mono">CC</span>
-              <span className="font-black text-lg tracking-tight">CleanCity</span>
+              <span className="font-black text-lg tracking-tight">CleanMaxx</span>
             </div>
 
             <h1 className="text-3xl md:text-4xl font-black tracking-tighter leading-[1.05] mb-4">
-              Join CleanCity.
+              Join CleanMaxx.
             </h1>
             <p className="text-sm text-white/75 leading-relaxed mb-10 max-w-[320px]">
               Become part of the community and help create a cleaner,
@@ -95,7 +95,7 @@ function Register() {
           {/* Right form */}
           <div className="flex-1 p-10 md:p-12 bg-paper">
             <h2 className="text-xl font-bold tracking-tight mb-1">Create account</h2>
-            <p className="text-sm text-muted mb-6">Join the CleanCity community today</p>
+            <p className="text-sm text-muted mb-6">Join the CleanMaxx community today</p>
 
             <form onSubmit={handleRegister} className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">

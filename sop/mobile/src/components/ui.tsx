@@ -1,8 +1,10 @@
 import React from 'react';
 import {
-  ActivityIndicator, Image, Pressable, RefreshControl, ScrollView,
+  ActivityIndicator, Animated, Image, Pressable, RefreshControl, ScrollView,
   StyleSheet, Text, TextInput, View, ViewStyle,
+  Easing,
 } from 'react-native';
+import { useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Report, ReportStatus } from '../types';
 import { statusLabel, wasteLabel } from '../types';
@@ -12,6 +14,18 @@ export const C = {
   muted: '#5B6270', accent: '#1656F5', accentSoft: '#E3EBFF', organic: '#557A3E',
   glass: '#1E8B80', white: '#FFFFFF', red: '#B42318', warning: '#A5711F',
 };
+
+function Enter({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translate = useRef(new Animated.Value(12)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 360, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(translate, { toValue: 0, duration: 420, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+  }, [delay, opacity, translate]);
+  return <Animated.View style={{ opacity, transform: [{ translateY: translate }] }}>{children}</Animated.View>;
+}
 
 export function Page({
   title, subtitle, eyebrow, children, refreshing, onRefresh, contentStyle,
@@ -26,17 +40,19 @@ export function Page({
         keyboardShouldPersistTaps="handled"
         refreshControl={onRefresh ? <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={C.accent} /> : undefined}
       >
-        {eyebrow ? <Text style={styles.eyebrow}>{eyebrow.toUpperCase()}</Text> : null}
-        <Text style={styles.pageTitle}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-        {children}
+        <Enter>
+          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow.toUpperCase()}</Text> : null}
+          <Text style={styles.pageTitle}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </Enter>
+        <Enter delay={70}>{children}</Enter>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 export function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
-  return <View style={[styles.card, style]}>{children}</View>;
+  return <Enter><View style={[styles.card, style]}>{children}</View></Enter>;
 }
 
 export function Button({

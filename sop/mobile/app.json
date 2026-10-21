@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CleanCity",
-    "slug": "cleancity-mobile",
+    "name": "CleanMaxx",
+    "slug": "cleanmaxx-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -10,14 +10,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cleancity.mobile",
+      "bundleIdentifier": "com.cleanmaxx.mobile",
       "infoPlist": {
-        "NSCameraUsageDescription": "CleanCity uses your camera to photograph waste reports and completed cleaning tasks.",
-        "NSPhotoLibraryUsageDescription": "CleanCity lets you choose a waste photo for a report."
+        "NSCameraUsageDescription": "CleanMaxx uses your camera to photograph waste reports and completed cleaning tasks.",
+        "NSPhotoLibraryUsageDescription": "CleanMaxx lets you choose a waste photo for a report.",
+        "NSLocationWhenInUseUsageDescription": "CleanMaxx uses your location to place reports and help cleaners reach assigned requests."
       }
     },
     "android": {
-      "package": "com.cleancity.mobile",
+      "package": "com.cleanmaxx.mobile",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -29,18 +30,17 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "CleanCity needs access to photos for waste reports.",
-          "cameraPermission": "CleanCity uses the camera to photograph waste and cleaned locations.",
+          "photosPermission": "CleanMaxx needs access to photos for waste reports.",
+          "cameraPermission": "CleanMaxx uses the camera to photograph waste and cleaned locations.",
           "microphonePermission": false
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "CleanCity uses your location to place reports and help cleaners reach assigned requests."
+          "locationWhenInUsePermission": "CleanMaxx uses your location to place reports and help cleaners reach assigned requests."
         }
-      ],
-      "expo-build-properties"
+      ]
     ]
   }
 }

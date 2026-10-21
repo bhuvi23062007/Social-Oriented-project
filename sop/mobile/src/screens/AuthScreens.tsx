@@ -6,8 +6,8 @@ import { Button, C, Card, ErrorText, Field } from '../components/ui';
 export function WelcomeScreen({ navigation }: any) {
   return (
     <View style={s.welcomeRoot}>
-      <View style={s.brandMark}><Text style={s.brandMarkText}>CC</Text></View>
-      <Text style={[s.brand, { color: C.white }]}>CleanCity</Text>
+      <View style={s.brandMark}><Text style={s.brandMarkText}>CMX</Text></View>
+      <Text style={[s.brand, { color: C.white }]}>CleanMaxx</Text>
       <Text style={s.hero}>Sorted streets start with one report.</Text>
       <Text style={s.welcomeCopy}>Report waste in your area, support a cleaner community, and earn rewards for your contribution.</Text>
       <View style={{ gap: 10, marginTop: 28 }}>
@@ -37,7 +37,7 @@ export function LoginScreen({ navigation }: any) {
   };
   return (
     <View style={s.authRoot}>
-      <Text style={s.brand}>CleanCity</Text>
+      <Text style={s.brand}>CleanMaxx</Text>
       <Text style={s.authTitle}>Welcome back.</Text>
       <Text style={s.authSubtitle}>Log in and we'll take you straight to your dashboard.</Text>
       <Card style={s.authCard}>
@@ -46,7 +46,7 @@ export function LoginScreen({ navigation }: any) {
         <ErrorText>{error}</ErrorText>
         <Button title="Log in" onPress={submit} loading={busy} disabled={!email.trim() || !password} />
       </Card>
-      <Text style={s.switchCopy}>New to CleanCity?</Text>
+      <Text style={s.switchCopy}>New to CleanMaxx?</Text>
       <Button title="Create an account" kind="secondary" onPress={() => navigation.navigate('Register')} />
     </View>
   );
@@ -72,8 +72,8 @@ export function RegisterScreen({ navigation }: any) {
   };
   return (
     <View style={s.authRoot}>
-      <Text style={s.brand}>CleanCity</Text>
-      <Text style={s.authTitle}>Join CleanCity.</Text>
+      <Text style={s.brand}>CleanMaxx</Text>
+      <Text style={s.authTitle}>Join CleanMaxx.</Text>
       <Text style={s.authSubtitle}>Become part of the community and help create a cleaner, greener environment.</Text>
       <Card style={s.authCard}>
         <Field label="First name" value={firstName} onChangeText={setFirstName} placeholder="First name" />

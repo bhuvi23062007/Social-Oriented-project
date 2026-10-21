@@ -48,7 +48,7 @@ function Login() {
           <div className="flex-1 p-10 md:p-12 bg-accent text-white flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-8">
               <span className="w-8 h-8 rounded-md bg-white/15 flex items-center justify-center text-sm font-mono">CC</span>
-              <span className="font-black text-lg tracking-tight">CleanCity</span>
+              <span className="font-black text-lg tracking-tight">CleanMaxx</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black tracking-tighter leading-[1.05] mb-4">
               Sorted streets start with one report.
@@ -73,7 +73,7 @@ function Login() {
 
           <div className="flex-1 p-10 md:p-12 bg-paper">
             <h2 className="text-xl font-bold tracking-tight mb-1">Log in</h2>
-            <p className="text-sm text-muted mb-7">Access your CleanCity account</p>
+            <p className="text-sm text-muted mb-7">Access your CleanMaxx account</p>
 
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div>

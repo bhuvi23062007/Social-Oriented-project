@@ -47,7 +47,7 @@ function Sidebar() {
       <div className="flex items-center justify-between px-2 mb-8">
         <div className="flex items-center gap-2">
           <span className="w-7 h-7 rounded-md bg-accent text-white flex items-center justify-center text-xs font-bold">CC</span>
-          <span className="font-black text-base tracking-tight">CleanCity</span>
+          <span className="font-black text-base tracking-tight">CleanMaxx</span>
         </div>
       </div>
 

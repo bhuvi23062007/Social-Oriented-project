@@ -27,11 +27,11 @@ export function MoreScreen({ navigation, role }: { navigation: any; role: Role }
   const { auth, logout } = useAuth();
   const items = menuByRole[role];
   return (
-    <Page eyebrow="CleanCity" title="More" subtitle="Additional tools and account options.">
+    <Page eyebrow="CleanMaxx" title="More" subtitle="Additional tools and account options.">
       <Card style={s.profile}>
         <View style={s.avatar}><Text style={s.avatarText}>{(auth?.name?.trim().charAt(0) || 'U').toUpperCase()}</Text></View>
         <View style={{ flex: 1 }}>
-          <Text style={s.name}>{auth?.name ?? 'CleanCity user'}</Text>
+          <Text style={s.name}>{auth?.name ?? 'CleanMaxx user'}</Text>
           <Text style={ui.smallMuted}>{auth?.email ?? ''}</Text>
           <Text style={s.role}>{role.replace('_', ' ')}</Text>
         </View>
@@ -52,12 +52,12 @@ export function MoreScreen({ navigation, role }: { navigation: any; role: Role }
       <Button
         title="Log out"
         kind="danger"
-        onPress={() => Alert.alert('Log out?', 'You will return to the CleanCity welcome screen.', [
+        onPress={() => Alert.alert('Log out?', 'You will return to the CleanMaxx welcome screen.', [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Log out', style: 'destructive', onPress: () => { void logout(); } },
         ])}
       />
-      <Text style={s.footer}>CleanCity · Community-driven cleanliness</Text>
+      <Text style={s.footer}>CleanMaxx · Community-driven cleanliness</Text>
     </Page>
   );
 }

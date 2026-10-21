@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar, Text } from 'react-native';
+import { Animated, StatusBar, Text } from 'react-native';
+import { useEffect, useRef } from 'react';
 
 import { AuthProvider, useAuth } from './src/AuthContext';
 import { C, Loading } from './src/components/ui';
@@ -21,7 +22,6 @@ import {
   CleanerDashboardScreen,
   CleanerTasksScreen,
   UrgentRequestsScreen,
-  ActiveTaskScreen,
   CleanerMessagesScreen,
 } from './src/screens/CleanerScreens';
 import {
@@ -33,6 +33,7 @@ import {
   AdminMessagesScreen,
 } from './src/screens/AdminScreens';
 import { MoreScreen } from './src/screens/MoreScreens';
+import ActiveTaskScreen from './src/screens/ActiveTaskScreen';
 
 const AuthStack = createNativeStackNavigator();
 const CitizenStack = createNativeStackNavigator();
@@ -47,10 +48,15 @@ const stackOptions = {
   headerTintColor: C.ink,
   headerTitleStyle: { fontWeight: '800' as const },
   contentStyle: { backgroundColor: C.paper },
+  animation: 'slide_from_right' as const,
 };
 
 function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
-  return <Text style={{ fontSize: focused ? 20 : 18, opacity: focused ? 1 : 0.72 }}>{emoji}</Text>;
+  const scale = useRef(new Animated.Value(focused ? 1 : 0.88)).current;
+  useEffect(() => {
+    Animated.spring(scale, { toValue: focused ? 1 : 0.88, useNativeDriver: true, damping: 14, stiffness: 180 }).start();
+  }, [focused, scale]);
+  return <Animated.Text style={{ fontSize: focused ? 20 : 18, opacity: focused ? 1 : 0.62, transform: [{ scale }] }}>{emoji}</Animated.Text>;
 }
 
 function PublicNavigator() {
@@ -132,7 +138,7 @@ function CleanerNavigator() {
   return (
     <CleanerStack.Navigator screenOptions={stackOptions}>
       <CleanerStack.Screen name="Tabs" component={CleanerTabs} options={{ headerShown: false }} />
-      <CleanerStack.Screen name="ActiveTask" component={ActiveTaskScreen} options={{ title: 'Active task' }} />
+      <CleanerStack.Screen name="ActiveTask" component={ActiveTaskScreen} options={{ headerShown: false, gestureEnabled: false }} />
       <CleanerStack.Screen name="Credits" component={CleanerCreditsScreen} options={{ title: 'Credits' }} />
       <CleanerStack.Screen name="Learning" component={LearningScreen} options={{ title: 'Learn' }} />
     </CleanerStack.Navigator>
@@ -173,7 +179,7 @@ function AdminNavigator() {
 
 function RootNavigation() {
   const { auth, ready } = useAuth();
-  if (!ready) return <Loading label="Opening CleanCity…" />;
+  if (!ready) return <Loading label="Opening CleanMaxx…" />;
 
   return (
     <NavigationContainer>
